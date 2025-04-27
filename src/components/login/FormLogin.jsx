@@ -1,29 +1,52 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function FormLogin() {
+  const navigate = useNavigate();
+  const [correo, setCorreo] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:3000/login', { correo, password });
+
+      const { token, rol } = response.data;
+
+      localStorage.setItem('token', token);
+
+      // Redirigir según el rol
+      if (rol === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (rol === 'docente') {
+        navigate('/docente-dashboard');
+      } else if (rol === 'estudiante') {
+        navigate('/estudiante-dashboard');
+      }
+    } catch (error) {
+      console.error('Error de inicio de sesión', error.response?.data?.message || error.message);
+      alert('Correo o contraseña incorrectos');
+    }
+  };
+
   return (
-    <form autoComplete="off" noValidate>
+    <form onSubmit={handleSubmit} autoComplete="off" noValidate>
       {/* Email field */}
       <div className="mb-3 position-relative">
-        <label htmlFor="codigo-utp" className="form-label fw-semibold">
+        <label htmlFor="correo" className="form-label fw-semibold">
           Email
         </label>
         <input
-          type="text"
+          type="email"
           className="form-control border-primary"
-          id="codigo-utp"
-          aria-describedby="codigo-utp-help"
-          defaultValue="#"
+          id="correo"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+          required
         />
-        <i className="fas fa-user input-icon" style={{ top: '50%' }}></i>
-        <div
-          id="codigo-utp-help"
-          className="info-text d-flex align-items-center mt-1"
-        >
-          <i className="fas fa-info-circle"></i>
-          Ejemplo de usuario: ...
-        </div>
+        <i className="fas fa-user input-icon" style={{ top: '75%' }}></i>
       </div>
 
       {/* Password field */}
@@ -35,9 +58,11 @@ function FormLogin() {
           type="password"
           className="form-control"
           id="password"
-          defaultValue="a"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <i className="fas fa-eye-slash input-icon password" style={{ top: '70%' }}></i>
+        <i className="fas fa-eye-slash input-icon password" style={{ top: '75%' }}></i>
       </div>
 
       {/* Reset password link */}
@@ -60,4 +85,3 @@ function FormLogin() {
 }
 
 export default FormLogin;
-

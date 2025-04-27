@@ -1,115 +1,82 @@
 
+/* Fondo */
 body {
     font-family: 'Inter', sans-serif;
     background-color: #e8f0fe;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin: 0;
-  }
+    padding: 0;
+}
   
-  .card {
-    border: none;
-    max-width: 1100px;
+/* Tarjeta principal */
+.login-card {
     width: 100%;
-    height: auto; /* Importante: altura automática para adaptarse al contenido */
-    border-radius: 0.375rem;
-    overflow: hidden;
-    box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 0.075);
-    display: flex;        /* Añadido para el modelo de caja flexible */
-    flex-direction: column; /* Apilar en pantallas pequeñas */
-  }
+    max-width: 1100px;
+    background: #ffffff;
+}
   
-  .left-side {
+/* Lado izquierdo - Ilustración */
+.left-side {
+    flex: 1;
     background-color: #e8f0fe;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 2rem;
+}
+  
+.left-side img {
+    width: 100%;
     height: auto;
-  }
-  .left-side img{
-      max-width: 100%;
-      height: auto;
-  }
+    object-fit: contain;
+}
   
-  .col-md-6 {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      box-sizing: border-box;
-  }
+/* Lado derecho - Formulario */
+.login-form {
+    flex: 1;
+    background-color: #ffffff;
+}
   
-  .logo-box {
+/* Logo */
+.logo-box {
     background-color: black;
     color: white;
     font-weight: 800;
     font-size: 1.25rem;
     padding: 0.25rem 0.5rem;
     user-select: none;
-  }
+}
   
-  .form-control:focus {
+/* Formulario */
+.form-control:focus {
     border-color: #2563eb;
     box-shadow: 0 0 0 0.25rem rgb(59 130 246 / 0.5);
-  }
+}
   
-  .input-icon {
+.input-icon {
     position: absolute;
     right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: #4b5773;
     cursor: pointer;
-  }
+}
   
-  .input-icon.password {
+.input-icon.password {
     color: #6c757d;
-  }
+}
   
-  .info-text {
+.info-text {
     font-size: 0.8rem;
     color: #6c757d;
-  }
+}
   
-  .info-text i {
+.info-text i {
     margin-right: 0.25rem;
-  }
+}
   
-  @media (max-width: 767.98px) {
-    .card {
-      border-radius: 0;
-      box-shadow: none;
-      flex-direction: column; /* Asegura que la imagen y el formulario se apilen */
-    }
-  
+/* Responsive ajustes */
+@media (max-width: 767.98px) {
     .left-side {
-      display: none; /* Oculta la imagen en pantallas pequeñas */
+      display: none; /* Oculta imagen en pantallas pequeñas */
     }
-  
-    .col-md-6.p-5 {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-      width: 100%;
-    }
-  }
-  
-  @media (min-width: 768px) {
-      .card{
-          flex-direction: row;
-          height: auto;
-      }
-    .left-side {
-      display: flex;        /* Muestra la imagen en pantallas más grandes */
-      align-items: center;  /* Alineación vertical de la imagen */
-      justify-content: center;
-      padding: 1.5rem;
-      flex: 1;
-    }
-    .col-md-6{
-          flex: 1;
-    }
-  }
+}
