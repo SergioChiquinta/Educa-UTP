@@ -7,10 +7,12 @@ import DocenteDashboard from './components/dashboard/DocenteDashboard';
 import EstudianteDashboard from './components/dashboard/EstudianteDashboard';
 
 function App() {
+  const skipLogin = process.env.REACT_APP_SKIP_LOGIN === 'true';
+  const isLoggedIn = skipLogin || localStorage.getItem('token');
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<AdminDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/docente-dashboard" element={<DocenteDashboard />} />
         <Route path="/estudiante-dashboard" element={<EstudianteDashboard />} />
