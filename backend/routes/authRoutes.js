@@ -1,16 +1,15 @@
 
-// backend/routes/authRoutes.js
-
 const express = require('express');
 const router = express.Router();
-const { login, getProfile, updateProfile, resetPassword } = require('../controllers/authController');
+const authController = require('../controllers/authController');
 
-// Rutas existentes
-router.post('/login', login);
-router.get('/profile', getProfile);
-router.put('/profile', updateProfile);
+// Rutas
+router.post('/login', authController.login);
+router.get('/profile', authController.getProfile);
+router.put('/profile', authController.updateProfile);
+router.post('/reset-password', authController.resetPassword);
 
-// Nueva ruta para restablecer contraseña
-router.post('/reset-password', resetPassword);
+// Ruta para subir foto de perfil
+router.put('/profile/picture', authController.upload.single('profile_image'), authController.updateProfilePicture);
 
 module.exports = router;

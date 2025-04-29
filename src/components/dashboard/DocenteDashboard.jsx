@@ -48,11 +48,36 @@ function Dashboard() {
 
   const handleEdit = () => {
     if (isEditing) {
+      // Actualizar datos del perfil
       axios.put('http://localhost:3000/api/profile', user, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(response => {
-        alert('Perfil actualizado correctamente');
+        if (selectedFile) {
+          // Si también seleccionó imagen, la subimos
+          const formData = new FormData();
+          formData.append('profile_image', selectedFile);
+  
+          axios.put('http://localhost:3000/api/profile/picture', formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+          .then(res => {
+            alert('Perfil y foto actualizados correctamente');
+            setUser(prevUser => ({
+              ...prevUser,
+              foto_perfil: res.data.profileImage.split('/').pop() // Extrae solo el nombre del archivo
+            }));
+          })          
+          .catch(error => {
+            console.error('Error al actualizar la foto', error);
+            alert('Error al actualizar la foto de perfil');
+          });
+        } else {
+          alert('Perfil actualizado correctamente');
+        }
       })
       .catch(error => {
         console.error('Error al actualizar el perfil', error);
@@ -60,7 +85,7 @@ function Dashboard() {
       });
     }
     setIsEditing(!isEditing);
-  };
+  };  
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -69,6 +94,13 @@ function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
+  };
+
+  // Foto de perfil
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
   };
 
   return (
@@ -80,7 +112,13 @@ function Dashboard() {
         </button>
         <div className="ms-auto d-flex align-items-center position-relative">
           <div className="profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
-            <img src="https://i.pravatar.cc/150?img=3" alt="avatar" className="rounded-circle" width="40" height="40" />
+          <img
+            src={user.foto_perfil ? `http://localhost:3000/uploads/${user.foto_perfil}` : 'https://i.pravatar.cc/150?img=3'}
+            alt="avatar"
+            className="rounded-circle"
+            width="40"
+            height="40"
+          />
             <span className="ms-2 fw-semibold">{user.nombre}</span>
           </div>
           <ul className="dropdown-menu dropdown-menu-end">
@@ -95,7 +133,7 @@ function Dashboard() {
           <h4 className="text-white text-center py-3">Menú</h4>
           <a href="#" onClick={() => showSection('welcome')} className="text-decoration-none d-block px-4 py-2 text-light">Inicio</a>
           <a href="#" onClick={() => showSection('profile')} className="text-decoration-none d-block px-4 py-2 text-light">Perfil</a>
-          <a href="#" className="text-decoration-none d-block px-4 py-2 text-light">UTP+biblio</a>
+          <a href="https://tubiblioteca.utp.edu.pe" className="text-decoration-none d-block px-4 py-2 text-light">UTP+biblio</a>
           <a href="#" className="text-decoration-none d-block px-4 py-2 text-light">Ayuda</a>
         </div>
 
@@ -115,6 +153,10 @@ function Dashboard() {
                 <div className="card-body">
                   <form>
                     <div className="mb-3">
+                      <label className="form-label">Foto de perfil</label>
+                      <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
+                    </div>
+                    <div className="mb-3">
                       <label className="form-label">Nombre</label>
                       <input type="text" className="form-control" name="nombre" value={user.nombre} onChange={handleChange} readOnly={!isEditing} />
                     </div>
@@ -123,16 +165,20 @@ function Dashboard() {
                       <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Contraseña</label>
-                      <input type="password" className="form-control" name="password" value={user.password} onChange={handleChange} placeholder="Nueva contraseña" readOnly={!isEditing} />
+                      <label className="form-label">Nueva contraseña</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="password"
+                        value={user.password}
+                        onChange={handleChange}
+                        placeholder="Escribe una nueva contraseña si deseas cambiarla"
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Rol</label>
-                      <select className="form-select" name="rol" value={user.rol} onChange={handleChange} disabled={!isEditing}>
-                        <option value="estudiante">Estudiante</option>
-                        <option value="docente">Docente</option>
-                        <option value="admin">Administrador</option>
-                      </select>
+                      <label className="form-label">Rol (no editable)</label>
+                      <input type="text" className="form-control" value={user.rol} readOnly />
                     </div>
                     <div className="text-center">
                       <button type="button" className="btn btn-primary" onClick={handleEdit}>
