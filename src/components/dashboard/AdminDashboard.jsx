@@ -19,6 +19,10 @@ function Dashboard() {
     setIsEditing(!isEditing);
   };
 
+  const handleLogout = () => {
+    window.location.href = '/'; 
+  };
+
   return (
     <div className="d-flex flex-column vh-100">
       {/* Navbar */}
@@ -32,7 +36,8 @@ function Dashboard() {
             <span className="ms-2 fw-semibold">Gean Limachi</span>
           </div>
           <ul className="dropdown-menu dropdown-menu-end">
-            <li><a className="dropdown-item" href="#">Cerrar sesión</a></li>
+            <li><a className="dropdown-item" href="#" onClick={handleLogout}>Cerrar sesión</a></li>
+
           </ul>
         </div>
       </nav>
