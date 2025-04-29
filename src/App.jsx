@@ -7,8 +7,7 @@ import DocenteDashboard from './components/dashboard/DocenteDashboard';
 import EstudianteDashboard from './components/dashboard/EstudianteDashboard';
 
 function App() {
-  const skipLogin = process.env.REACT_APP_SKIP_LOGIN === 'true';
-  const isLoggedIn = skipLogin || localStorage.getItem('token');
+
   return (
     <Router>
       <Routes>
