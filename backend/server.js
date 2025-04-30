@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const path = require('path');
 
 // Middleware
 app.use(cors());  // <--- HABILITA CORS
@@ -16,3 +17,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
