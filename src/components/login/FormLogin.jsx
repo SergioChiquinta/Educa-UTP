@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function FormLogin() {
   const navigate = useNavigate();
@@ -10,146 +12,158 @@ function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/api/login', { correo, password });
-      const { token, rol } = response.data;
-      localStorage.setItem('token', token);
+      const { token, user } = response.data;
 
-      if (rol === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (rol === 'docente') {
-        navigate('/docente-dashboard');
-      } else if (rol === 'estudiante') {
-        navigate('/estudiante-dashboard');
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      toast.success(`Bienvenido ${user.nombre}`);
+
+      switch (user.rol) {
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'docente':
+          navigate('/docente/recursos');
+          break;
+        case 'estudiante':
+          navigate('/estudiante/buscar');
+          break;
+        default:
+          navigate('/');
       }
     } catch (error) {
-      console.error('Error de inicio de sesión', error.response?.data?.message || error.message);
-      alert('Correo o contraseña incorrectos');
+      const message = error.response?.data?.message || 'Error de conexión';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleResetPassword = async (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
+    if (!resetEmail) {
+      toast.warn('Por favor ingresa tu correo electrónico.');
+      return;
+    }
+
     try {
       await axios.post('http://localhost:3000/api/reset-password', { correo: resetEmail });
-      alert('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.');
+      toast.success('Si el correo está registrado, recibirás instrucciones.');
       setShowResetPassword(false);
       setResetEmail('');
     } catch (error) {
-      console.error('Error al restablecer contraseña', error.response?.data?.message || error.message);
-      alert('Error al intentar restablecer la contraseña.');
+      toast.error(error.response?.data?.message || 'Error al enviar la solicitud');
     }
   };
 
   return (
-    <>
+    <div className="max-w-sm mx-auto mt-12 p-8 bg-white shadow-md rounded-lg">
+      <ToastContainer position="top-center" autoClose={3000} />
+      <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+        {showResetPassword ? 'Recuperar Contraseña' : 'Iniciar Sesión'}
+      </h2>
+
       {!showResetPassword ? (
-        <form onSubmit={handleSubmit} autoComplete="off" noValidate>
-          {/* Email field */}
-          <div className="mb-3 position-relative">
-            <label htmlFor="correo" className="form-label fw-semibold">
-              Email
-            </label>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label htmlFor="correo" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
             <input
               type="email"
-              className="form-control border-primary"
               id="correo"
               value={correo}
               onChange={(e) => setCorreo(e.target.value)}
               required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             />
-            <i className="fas fa-user input-icon" style={{ top: '75%' }}></i>
           </div>
 
-          {/* Password field */}
-          <div className="mb-3 position-relative">
-            <label htmlFor="password" className="form-label fw-semibold">
-              Contraseña
-            </label>
-            <div className="input-group">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
+            <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
-                className="form-control"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               />
-              <span
-                className="input-group-text"
-                style={{ cursor: "pointer" }}
-                onClick={togglePasswordVisibility}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
               >
-                <i className={`fas ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
-              </span>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
             </div>
           </div>
 
-          {/* Reset password link */}
-          <div className="text-end mb-4">
-            <a
-              href="#"
-              className="text-secondary fw-medium text-decoration-none"
+          <div className="flex justify-between text-sm">
+            <button
+              type="button"
               onClick={() => setShowResetPassword(true)}
+              className="text-indigo-600 hover:text-indigo-500"
             >
               ¿Olvidaste tu contraseña?
-            </a>
+            </button>
           </div>
 
-          {/* Submit button */}
           <button
             type="submit"
-            className="btn btn-secondary w-100 py-2 fw-semibold"
-            style={{ fontSize: '0.9rem' }}
+            disabled={isLoading}
+            className={`w-full flex justify-center py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            Iniciar sesión
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Procesando...
+              </>
+            ) : 'Iniciar Sesión'}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleResetPassword} autoComplete="off" noValidate>
-          <h5 className="text-center mb-4">Restablecer contraseña</h5>
-
-          {/* Reset Email field */}
-          <div className="mb-3 position-relative">
-            <label htmlFor="resetEmail" className="form-label fw-semibold">
-              Ingresa tu correo
-            </label>
+        <form onSubmit={handleReset} className="space-y-4">
+          <div>
+            <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
             <input
               type="email"
-              className="form-control border-primary"
               id="resetEmail"
               value={resetEmail}
               onChange={(e) => setResetEmail(e.target.value)}
               required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="d-flex justify-content-between">
+          <div className="flex space-x-4">
             <button
               type="button"
-              className="btn btn-outline-secondary"
               onClick={() => setShowResetPassword(false)}
+              className="w-1/2 py-2 px-4 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
             >
-              Volver
+              Cancelar
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="w-1/2 py-2 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
             >
               Enviar
             </button>
           </div>
         </form>
       )}
-    </>
+    </div>
   );
 }
 
