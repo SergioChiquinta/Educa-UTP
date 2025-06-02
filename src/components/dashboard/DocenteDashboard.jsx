@@ -123,7 +123,7 @@ function Dashboard() {
           </div>
           <ul className="dropdown-menu dropdown-menu-end">
             <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
-            <li><a className="dropdown-item" href="#" onClick={handleLogout}>Cerrar sesión</a></li>
+            
 
           </ul>
         </div>
