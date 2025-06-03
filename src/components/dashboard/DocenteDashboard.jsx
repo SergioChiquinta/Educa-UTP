@@ -1,10 +1,18 @@
 
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+import ResourceList from '../docente/ResourceList';
+import SharedResouces from '../docente/SharedResources';
+import ResourceUpload from '../docente/ResourceUpload';
+
 function Dashboard() {
+  
+  const [resources, setResources] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('welcome');
@@ -18,7 +26,46 @@ function Dashboard() {
     password: ''
   });
 
+  // Función para manejar el éxito en la subida de recursos
+  const handleUploadSuccess = (uploadedResource) => {
+    // Actualizar la lista de recursos
+    setResources(prev => [...prev, uploadedResource]);
+    // Mostrar mensaje de éxito
+    alert('Recurso subido correctamente');
+    // Cambiar a la vista de recursos
+    setActiveSection('resources');
+  };
+
+  // Función para manejar la eliminación de recursos
+  const handleDeleteResource = (id) => {
+    setResources(prev => prev.filter(resource => resource.id_recurso !== id));
+  };
+
+  // Función para manejar la actualización de recursos
+  const handleUpdateResource = (updatedResource) => {
+    setResources(prev => prev.map(resource => 
+      resource.id_recurso === updatedResource.id_recurso ? updatedResource : resource
+    ));
+  };
+
   const token = localStorage.getItem('token');
+
+  // Carga los cursos y categorías al montar el componente
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/docente/datos-utiles', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCourses(response.data.cursos);
+        setCategories(response.data.categorias);
+      } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+      }
+    };
+    
+    if (token) loadInitialData();
+  }, [token]);
 
   useEffect(() => {
     if (!token) {
@@ -198,6 +245,9 @@ function Dashboard() {
         <div className={`sidebar bg-dark ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', maxWidth: '220px', transition: 'all 0.3s' }}>
           <h4 className="text-white text-center py-3">Menú</h4>
           <a href="#" onClick={() => showSection('welcome')} className="text-decoration-none d-block px-4 py-2 text-light">Inicio</a>
+          <a href="#" onClick={() => showSection('resources')} className="text-decoration-none d-block px-4 py-2 text-light">Mis recursos</a>
+          <a href="#" onClick={() => showSection('upload')} className="text-decoration-none d-block px-4 py-2 text-light">Subir recursos</a>
+          <a href="#" onClick={() => showSection('shared')} className="text-decoration-none d-block px-4 py-2 text-light">Recursos Compartidos</a>
           <a href="#" onClick={() => showSection('profile')} className="text-decoration-none d-block px-4 py-2 text-light">Perfil</a>
           <a href="https://tubiblioteca.utp.edu.pe" className="text-decoration-none d-block px-4 py-2 text-light">UTP+biblio</a>
           <a href="#" className="text-decoration-none d-block px-4 py-2 text-light">Ayuda</a>
@@ -210,6 +260,7 @@ function Dashboard() {
               <h1 className="mb-3">¡Bienvenido {user.nombre_rol}!</h1>
               <p className="text-muted">Nos alegra tenerte de vuelta.</p>
             </div>
+            
           )}
 
           {activeSection === 'profile' && (
@@ -260,6 +311,30 @@ function Dashboard() {
               </div>
             </div>
           )}
+          
+          <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            {activeSection === 'upload' && (
+              <ResourceUpload
+                courses={courses} 
+                categories={categories} 
+                onUploadSuccess={handleUploadSuccess}
+              />
+            )}
+
+            {activeSection === 'resources' && userId && (
+              <ResourceList 
+                userId={userId} 
+                courses={courses} 
+                categories={categories}
+                onDelete={handleDeleteResource}
+                onUpdate={handleUpdateResource}
+              />
+            )}
+
+            {activeSection === 'shared' && userId && (
+              <SharedResources userId={userId} />
+            )}
+          </main>
         </div>
       </div>
 
