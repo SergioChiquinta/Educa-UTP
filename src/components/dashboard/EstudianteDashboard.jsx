@@ -119,7 +119,7 @@ function Dashboard() {
             width="40"
             height="40"
           />
-            <span className="ms-2 fw-semibold">{user.nombre}</span>
+            <span className="ms-2 fw-semibold">{user.nombre_rol}</span>
           </div>
           <ul className="dropdown-menu dropdown-menu-end">
             <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
@@ -141,7 +141,7 @@ function Dashboard() {
         <div className={`content flex-grow-1 p-4 ${sidebarCollapsed ? 'full' : ''}`} style={{ transition: 'margin-left 0.3s' }}>
           {activeSection === 'welcome' && (
             <div className="text-center mt-5">
-              <h1 className="mb-3">¡Bienvenido {user.rol}!</h1>
+              <h1 className="mb-3">¡Bienvenido {user.nombre_rol}!</h1>
               <p className="text-muted">Nos alegra tenerte de vuelta.</p>
             </div>
           )}
@@ -158,7 +158,7 @@ function Dashboard() {
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nombre</label>
-                      <input type="text" className="form-control" name="nombre" value={user.nombre} onChange={handleChange} readOnly={!isEditing} />
+                      <input type="text" className="form-control" name="nombre" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing} />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Correo</label>
@@ -178,7 +178,7 @@ function Dashboard() {
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Rol (no editable)</label>
-                      <input type="text" className="form-control" value={user.rol} readOnly />
+                      <input type="text" className="form-control" value={user.nombre_rol} readOnly />
                     </div>
                     <div className="text-center">
                       <button type="button" className="btn btn-primary" onClick={handleEdit}>

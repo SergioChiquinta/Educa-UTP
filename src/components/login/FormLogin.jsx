@@ -28,13 +28,13 @@ function FormLogin() {
 
       switch (user.rol) {
         case 'admin':
-          navigate('/admin/dashboard');
+          navigate('/admin-dashboard');
           break;
         case 'docente':
-          navigate('/docente/recursos');
+          navigate('/docente-dashboard');
           break;
         case 'estudiante':
-          navigate('/estudiante/buscar');
+          navigate('/estudiante-dashboard');
           break;
         default:
           navigate('/');
@@ -65,106 +65,116 @@ function FormLogin() {
   };
 
   return (
-    <div className="max-w-sm mx-auto mt-12 p-8 bg-white shadow-md rounded-lg">
-      <ToastContainer position="top-center" autoClose={3000} />
-      <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-        {showResetPassword ? 'Recuperar Contraseña' : 'Iniciar Sesión'}
-      </h2>
+  <>
+    <ToastContainer position="top-center" autoClose={3000} />
+    {!showResetPassword ? (
+      <form onSubmit={handleLogin} autoComplete="off" noValidate>
+        {/* Email field */}
+        <div className="mb-3 position-relative">
+          <label htmlFor="correo" className="form-label fw-semibold">
+            Email
+          </label>
+          <input
+            type="email"
+            className="form-control border-primary"
+            id="correo"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            required
+          />
+          <i className="fas fa-user input-icon" style={{ top: '75%' }}></i>
+        </div>
 
-      {!showResetPassword ? (
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label htmlFor="correo" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+        {/* Password field */}
+        <div className="mb-3 position-relative">
+          <label htmlFor="password" className="form-label fw-semibold">
+            Contraseña
+          </label>
+          <div className="input-group">
             <input
-              type="email"
-              id="correo"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
+              type={showPassword ? "text" : "password"}
+              className="form-control"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500"
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <button
-              type="button"
-              onClick={() => setShowResetPassword(true)}
-              className="text-indigo-600 hover:text-indigo-500"
+            <span
+              className="input-group-text"
+              style={{ cursor: "pointer" }}
+              onClick={() => setShowPassword(!showPassword)}
             >
-              ¿Olvidaste tu contraseña?
-            </button>
+              <i className={`fas ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
+            </span>
           </div>
+        </div>
 
+        {/* Reset password link */}
+        <div className="text-end mb-4">
+          <a
+            href="#"
+            className="text-secondary fw-medium text-decoration-none"
+            onClick={() => setShowResetPassword(true)}
+          >
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+
+        {/* Submit button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="btn btn-secondary w-100 py-2 fw-semibold"
+          style={{ fontSize: '0.9rem' }}
+        >
+          {isLoading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2"></span>
+              Procesando...
+            </>
+          ) : 'Iniciar sesión'}
+        </button>
+      </form>
+    ) : (
+      <form onSubmit={handleReset} autoComplete="off" noValidate>
+        <h5 className="text-center mb-4">Restablecer contraseña</h5>
+
+        {/* Reset Email field */}
+        <div className="mb-3 position-relative">
+          <label htmlFor="resetEmail" className="form-label fw-semibold">
+            Ingresa tu correo
+          </label>
+          <input
+            type="email"
+            className="form-control border-primary"
+            id="resetEmail"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="d-flex justify-content-between">
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => setShowResetPassword(false)}
+          >
+            Volver
+          </button>
           <button
             type="submit"
-            disabled={isLoading}
-            className={`w-full flex justify-center py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className="btn btn-primary"
           >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                Procesando...
-              </>
-            ) : 'Iniciar Sesión'}
+            Enviar
           </button>
-        </form>
-      ) : (
-        <form onSubmit={handleReset} className="space-y-4">
-          <div>
-            <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-            <input
-              type="email"
-              id="resetEmail"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+        </div>
+      </form>
+    )}
+  </>
+);
 
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={() => setShowResetPassword(false)}
-              className="w-1/2 py-2 px-4 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="w-1/2 py-2 px-4 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-            >
-              Enviar
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
-  );
 }
 
 export default FormLogin;
