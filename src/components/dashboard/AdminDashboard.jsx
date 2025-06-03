@@ -32,10 +32,8 @@ function Dashboard() {
         });
         
         // Extrae solo el nombre del archivo si hay una URL completa
-        let foto_perfil = response.data.foto_perfil;
-        if (foto_perfil && foto_perfil.includes('/')) {
-          foto_perfil = foto_perfil.split('/').pop();
-        }
+        const foto_perfil = response.data.foto_perfil || '';
+
 
         setUser({
           nombre_completo: response.data.nombre_completo,
@@ -171,17 +169,19 @@ function Dashboard() {
         </button>
         <div className="ms-auto d-flex align-items-center position-relative">
           <div className="profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
+          
           <img
             src={
               user.foto_perfil
-                ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
+                ? `${user.foto_perfil}?t=${Date.now()}`
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || 'U')}&background=random&rounded=true&size=40`
             }
             alt="avatar"
-            className="rounded-circle"
             width="40"
             height="40"
           />
+
+
             <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
           </div>
           <ul className="dropdown-menu dropdown-menu-end">

@@ -175,6 +175,13 @@ exports.updateProfilePicture = (req, res) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
     const userId = decoded.id;
+    
+    console.log('Archivo recibido:', req.file); // 👈 Verifica esto en consola
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se recibió la imagen' });
+    }
+
     const profileImage = req.file.filename;
 
     db.query(
@@ -185,7 +192,7 @@ exports.updateProfilePicture = (req, res) => {
 
         res.json({ 
           message: 'Foto actualizada exitosamente',
-          filename: profileImage // Asegúrate de enviar solo el nombre del archivo
+          filename: profileImage
         });
       }
     );

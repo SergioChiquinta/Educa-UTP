@@ -8,7 +8,8 @@ const path = require('path');
 app.use(cors());  // <--- HABILITA CORS
 app.use(express.json());
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static('uploads'));
+
 
 // Rutas
 const authRoutes = require('./routes/authRoutes');
