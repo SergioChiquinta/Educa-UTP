@@ -9,13 +9,12 @@ function Dashboard() {
   const [activeSection, setActiveSection] = useState('welcome');
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState({
-    nombre: '',
-    correo: '',
-    rol: '',
-    password: '',
     nombre_completo: '',
+    correo: '',
     nombre_rol: '',
-    foto_perfil: ''
+    area_interes: '',
+    foto_perfil: '',
+    password: ''
   });
 
   const token = localStorage.getItem('token');
@@ -25,19 +24,35 @@ function Dashboard() {
       navigate('/');
       return;
     }
-    axios.get('http://localhost:3000/api/profile', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(response => {
-      setUser({
-        ...response.data,
-        password: '' // No traemos la contraseña real
-      });
-    })
-    .catch(error => {
-      console.error('Error al cargar el perfil', error);
-      navigate('/');
-    });
+    
+    const loadProfile = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Extrae solo el nombre del archivo si hay una URL completa
+        let foto_perfil = response.data.foto_perfil;
+        if (foto_perfil && foto_perfil.includes('/')) {
+          foto_perfil = foto_perfil.split('/').pop();
+        }
+
+        setUser({
+          nombre_completo: response.data.nombre_completo,
+          correo: response.data.correo,
+          nombre_rol: response.data.nombre_rol,
+          area_interes: response.data.area_interes || '',
+          foto_perfil: foto_perfil || '',
+          password: ''
+        });
+
+      } catch (error) {
+        console.error('Error al cargar perfil:', error);
+        navigate('/');
+      }
+    };
+
+    loadProfile();
   }, [token, navigate]);
 
   const toggleSidebar = () => {
@@ -49,46 +64,66 @@ function Dashboard() {
     setIsEditing(false);
   };
 
-  const handleEdit = () => {
-    if (isEditing) {
-      // Actualizar datos del perfil
-      axios.put('http://localhost:3000/api/profile', user, {
+  const handleEdit = async () => {
+  if (isEditing) {
+    try {
+      // Primero actualizamos los datos del perfil
+      await axios.put('http://localhost:3000/api/profile', {
+        nombre_completo: user.nombre_completo,
+        correo: user.correo,
+        password: user.password,
+        area_interes: user.area_interes
+      }, {
         headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(response => {
-        if (selectedFile) {
-          // Si también seleccionó imagen, la subimos
-          const formData = new FormData();
-          formData.append('profile_image', selectedFile);
-  
-          axios.put('http://localhost:3000/api/profile/picture', formData, {
+      });
+
+      // Luego actualizamos la foto si hay una seleccionada
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('profile_image', selectedFile);
+
+        const pictureResponse = await axios.put(
+          'http://localhost:3000/api/profile/picture', 
+          formData, 
+          {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data'
             }
-          })
-          .then(res => {
-            alert('Perfil y foto actualizados correctamente');
-            setUser(prevUser => ({
-              ...prevUser,
-              foto_perfil: res.data.profileImage.split('/').pop() // Extrae solo el nombre del archivo
-            }));
-          })          
-          .catch(error => {
-            console.error('Error al actualizar la foto', error);
-            alert('Error al actualizar la foto de perfil');
-          });
-        } else {
-          alert('Perfil actualizado correctamente');
-        }
-      })
-      .catch(error => {
-        console.error('Error al actualizar el perfil', error);
-        alert('Error al actualizar perfil');
+          }
+        );
+
+        // Forzar una actualización completa del estado
+        setUser(prev => ({
+          ...prev,
+          foto_perfil: pictureResponse.data.filename,
+          password: '' // Limpiar contraseña
+        }));
+      }
+
+      // Recargar los datos del servidor para asegurar consistencia
+      const refreshed = await axios.get('http://localhost:3000/api/profile', {
+        headers: { Authorization: `Bearer ${token}` }
       });
+
+      setUser({
+        nombre_completo: refreshed.data.nombre_completo,
+        correo: refreshed.data.correo,
+        nombre_rol: refreshed.data.nombre_rol,
+        area_interes: refreshed.data.area_interes || '',
+        foto_perfil: refreshed.data.foto_perfil?.split('/').pop() || '',
+        password: ''
+      });
+
+      alert(selectedFile ? 'Perfil y foto actualizados' : 'Perfil actualizado');
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error.response?.data?.message || 'Error al actualizar');
     }
-    setIsEditing(!isEditing);
-  };  
+  }
+  setIsEditing(!isEditing);
+};
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -96,6 +131,7 @@ function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/');
   };
 
@@ -103,7 +139,27 @@ function Dashboard() {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Validación básica del tipo de archivo
+      if (!file.type.match('image.*')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+      // Validación de tamaño (ejemplo: máximo 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('La imagen no debe exceder los 2MB');
+        return;
+      }
+      setSelectedFile(file);
+      
+      // Vista previa inmediata (opcional)
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUser(prev => ({...prev, foto_perfil: event.target.result}));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -116,13 +172,17 @@ function Dashboard() {
         <div className="ms-auto d-flex align-items-center position-relative">
           <div className="profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
           <img
-            src={user.foto_perfil ? `http://localhost:3000/uploads/${user.foto_perfil}` : 'https://i.pravatar.cc/150?img=3'}
+            src={
+              user.foto_perfil
+                ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || 'U')}&background=random&rounded=true&size=40`
+            }
             alt="avatar"
             className="rounded-circle"
             width="40"
             height="40"
           />
-            <span className="ms-2 fw-semibold">{user.nombre_rol}</span>
+            <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
           </div>
           <ul className="dropdown-menu dropdown-menu-end">
             <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
@@ -161,7 +221,7 @@ function Dashboard() {
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nombre</label>
-                      <input type="text" className="form-control" name="nombre" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing} />
+                      <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Correo</label>
@@ -182,6 +242,10 @@ function Dashboard() {
                     <div className="mb-3">
                       <label className="form-label">Rol (no editable)</label>
                       <input type="text" className="form-control" value={user.nombre_rol} readOnly />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Área de interés</label>
+                      <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
                     </div>
                     <div className="text-center">
                       <button type="button" className="btn btn-primary" onClick={handleEdit}>

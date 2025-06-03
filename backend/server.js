@@ -8,6 +8,8 @@ const path = require('path');
 app.use(cors());  // <--- HABILITA CORS
 app.use(express.json());
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Rutas
 const authRoutes = require('./routes/authRoutes');
 app.use('/api', authRoutes);
@@ -17,5 +19,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

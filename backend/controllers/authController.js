@@ -70,7 +70,8 @@ exports.getProfile = (req, res) => {
     const userId = decoded.id;
 
     const query = `
-      SELECT u.id_usuario, u.nombre_completo, u.correo, r.nombre_rol, u.area_interes, u.estado, u.fecha_registro
+      SELECT u.id_usuario, u.nombre_completo, u.correo, r.nombre_rol, 
+             u.area_interes, u.estado, u.fecha_registro, u.foto_perfil
       FROM usuarios u
       JOIN roles r ON u.id_rol = r.id_rol
       WHERE u.id_usuario = ?
@@ -80,7 +81,13 @@ exports.getProfile = (req, res) => {
       if (err) return res.status(500).json({ message: 'Error de servidor' });
       if (results.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-      res.json(results[0]);
+      const userData = results[0];
+      // Asegúrate de incluir la URL completa de la imagen si existe
+      if (userData.foto_perfil) {
+        userData.foto_perfil = `${process.env.BASE_URL}/uploads/${userData.foto_perfil}`;
+      }
+      
+      res.json(userData);
     });
   });
 };
@@ -114,11 +121,15 @@ exports.updateProfile = (req, res) => {
         );
       });
     } else {
+      // En authController.js, modifica updateProfile:
       db.query(
         'UPDATE usuarios SET nombre_completo = ?, correo = ?, area_interes = ? WHERE id_usuario = ?',
         [nombre_completo, correo, area_interes, userId],
         (err) => {
-          if (err) return res.status(500).json({ message: 'Error al actualizar el perfil' });
+          if (err) {
+            console.error('Error SQL:', err);
+            return res.status(500).json({ message: 'Error al actualizar el perfil' });
+          }
           res.json({ message: 'Perfil actualizado exitosamente' });
         }
       );
@@ -173,10 +184,12 @@ exports.updateProfilePicture = (req, res) => {
       'UPDATE usuarios SET foto_perfil = ? WHERE id_usuario = ?',
       [profileImage, userId],
       (err) => {
-        if (err) return res.status(500).json({ message: 'Error al actualizar la foto de perfil' });
+        if (err) return res.status(500).json({ message: 'Error al actualizar la foto' });
 
-        const imageUrl = `http://localhost:3000/uploads/${profileImage}`;
-        res.json({ message: 'Foto de perfil actualizada exitosamente', profileImage: imageUrl });
+        res.json({ 
+          message: 'Foto actualizada exitosamente',
+          filename: profileImage // Asegúrate de enviar solo el nombre del archivo
+        });
       }
     );
   });
