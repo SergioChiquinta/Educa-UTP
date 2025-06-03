@@ -67,49 +67,49 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   };
 
   return (
-    <div className="card mb-4">
-      <div className="card-header bg-primary text-white">
-        <h5>Subir Nuevo Recurso</h5>
+    <div className="card shadow-lg rounded-4 border-0 mb-4">
+      <div className="card-header text-white rounded-top-4" style={{ backgroundColor: '#1b1f3b' }}>
+        <h5 className="mb-0"><i className="bi bi-upload me-2"></i>Subir Nuevo Recurso</h5>
       </div>
-      <div className="card-body">
+      <div className="card-body p-4">
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Título</label>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Título</label>
             <input
               type="text"
-              className="form-control"
+              className="form-control shadow-sm"
               name="title"
               value={formData.title}
               onChange={handleChange}
               required
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label">Descripción</label>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Descripción</label>
             <textarea
-              className="form-control"
+              className="form-control shadow-sm"
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows="3"
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label">Archivo</label>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Archivo</label>
             <input
               type="file"
-              className="form-control"
+              className="form-control shadow-sm"
               onChange={handleFileChange}
               accept=".pdf,.docx,.pptx"
               required
             />
-            <small className="text-muted">Formatos aceptados: PDF, DOCX, PPTX (Máx. 40MB)</small>
+            <small className="form-text text-muted">Formatos aceptados: PDF, DOCX, PPTX (Máx. 40MB)</small>
           </div>
-          <div className="row mb-3">
+          <div className="row mb-4">
             <div className="col-md-6">
-              <label className="form-label">Curso</label>
+              <label className="form-label fw-semibold">Curso</label>
               <select
-                className="form-select"
+                className="form-select shadow-sm"
                 name="courseId"
                 value={formData.courseId}
                 onChange={handleChange}
@@ -124,9 +124,9 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               </select>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Categoría</label>
+              <label className="form-label fw-semibold">Categoría</label>
               <select
-                className="form-select"
+                className="form-select shadow-sm"
                 name="categoryId"
                 value={formData.categoryId}
                 onChange={handleChange}
@@ -141,10 +141,10 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               </select>
             </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label">Tipo de Archivo</label>
+          <div className="mb-4">
+            <label className="form-label fw-semibold">Tipo de Archivo</label>
             <select
-              className="form-select"
+              className="form-select shadow-sm"
               name="fileType"
               value={formData.fileType}
               onChange={handleChange}
@@ -155,17 +155,24 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               <option value="PPTX">PowerPoint (PPTX)</option>
             </select>
           </div>
+          <div className="text-end">
+          
           <button 
             type="submit" 
-            className="btn btn-primary"
+            className="btn text-white px-4 py-2 rounded-3"
+            style={{ backgroundColor: '#1b1f3b' }}
             disabled={isUploading}
           >
-            {isUploading ? 'Subiendo...' : 'Subir Recurso'}
-          </button>
+
+              <i className="bi bi-cloud-arrow-up me-2"></i>
+              {isUploading ? 'Subiendo...' : 'Subir Recurso'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
+  
 };
 
 export default ResourceUpload;

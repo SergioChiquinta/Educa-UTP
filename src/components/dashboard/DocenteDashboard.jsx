@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -201,130 +200,131 @@ function Dashboard() {
 
   return (
     <div className="d-flex flex-column vh-100">
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <button className="btn btn-outline-primary me-3" onClick={toggleSidebar}>
-          ☰
-        </button>
-        <div className="ms-auto d-flex align-items-center position-relative">
-          <div className="profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
-          <img
-            src={
-              user.foto_perfil
-                ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || 'U')}&background=random&rounded=true&size=40`
-            }
-            alt="avatar"
-            className="rounded-circle"
-            width="40"
-            height="40"
-          />
-            <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
-          </div>
-          <ul className="dropdown-menu dropdown-menu-end">
-            <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
-          </ul>
-        </div>
-      </nav>
-
-      <div className="d-flex flex-grow-1">
-        {/* Sidebar */}
-        <div className={`sidebar bg-dark ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', maxWidth: '220px', transition: 'all 0.3s' }}>
-          <h4 className="text-white text-center py-3">Menú</h4>
-          <a href="#" onClick={() => showSection('welcome')} className="text-decoration-none d-block px-4 py-2 text-light">Inicio</a>
-          <a href="#" onClick={() => showSection('resources')} className="text-decoration-none d-block px-4 py-2 text-light">Mis recursos</a>
-          <a href="#" onClick={() => showSection('upload')} className="text-decoration-none d-block px-4 py-2 text-light">Subir recursos</a>
-          <a href="#" onClick={() => showSection('shared')} className="text-decoration-none d-block px-4 py-2 text-light">Recursos Compartidos</a>
-          <a href="#" onClick={() => showSection('profile')} className="text-decoration-none d-block px-4 py-2 text-light">Perfil</a>
-          <a href="https://tubiblioteca.utp.edu.pe" className="text-decoration-none d-block px-4 py-2 text-light">UTP+biblio</a>
-          <a href="#" className="text-decoration-none d-block px-4 py-2 text-light">Ayuda</a>
-        </div>
-
-        {/* Main Content */}
-        <div className={`content flex-grow-1 p-4 ${sidebarCollapsed ? 'full' : ''}`} style={{ transition: 'margin-left 0.3s' }}>
-          {activeSection === 'welcome' && (
-            <div className="text-center mt-5">
-              <h1 className="mb-3">¡Bienvenido {user.nombre_rol}!</h1>
-              <p className="text-muted">Nos alegra tenerte de vuelta.</p>
-            </div>
-            
-          )}
-
-          {activeSection === 'profile' && (
-            <div className="container mt-5">
-              <h2 className="mb-4 text-center">Perfil de Usuario</h2>
-              <div className="card mx-auto" style={{ maxWidth: '600px' }}>
-                <div className="card-body">
-                  <form>
-                    <div className="mb-3">
-                      <label className="form-label">Foto de perfil</label>
-                      <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Nombre</label>
-                      <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Correo</label>
-                      <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Nueva contraseña</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        name="password"
-                        value={user.password}
-                        onChange={handleChange}
-                        placeholder="Escribe una nueva contraseña si deseas cambiarla"
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Rol (no editable)</label>
-                      <input type="text" className="form-control" value={user.nombre_rol} readOnly />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Área de interés</label>
-                      <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
-                    </div>
-                    <div className="text-center">
-                      <button type="button" className="btn btn-primary" onClick={handleEdit}>
-                        {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            {activeSection === 'upload' && (
-              <ResourceUpload 
-                courses={courses} 
-                categories={categories} 
-                onUploadSuccess={handleUploadSuccess}  // Pasa la función definida
-              />
-            )}
-
-            {activeSection === 'resources' && userId && (
-              <ResourceList userId={userId} courses={courses} categories={categories} />
-            )}
-
-            {activeSection === 'shared' && userId && (
-              <SharedResources userId={userId} />
-            )}
-          </main>
-        </div>
+  {/* Navbar */}
+  <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
+    <button className="btn btn-outline-primary me-3" onClick={toggleSidebar}>☰</button>
+    <div className="ms-auto d-flex align-items-center dropdown">
+      <div className="d-flex align-items-center" data-bs-toggle="dropdown" style={{ cursor: 'pointer' }}>
+        <img
+          src={
+            user.foto_perfil
+              ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || 'U')}&background=random&rounded=true&size=40`
+          }
+          alt="avatar"
+          className="rounded-circle"
+          width="40"
+          height="40"
+        />
+        <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
       </div>
-
-      <style>{`
-        .sidebar.collapsed {
-          margin-left: -220px;
-        }
-      `}</style>
+      <ul className="dropdown-menu dropdown-menu-end mt-2">
+        <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
+      </ul>
     </div>
+  </nav>
+
+  <div className="d-flex flex-grow-1">
+    {/* Sidebar */}
+    <div className={`bg-dark text-white sidebar shadow-sm ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', transition: 'all 0.3s' }}>
+      <h5 className="text-center py-3 border-bottom border-secondary">Menú</h5>
+      <ul className="nav flex-column px-3">
+        {[
+          { label: 'Inicio', section: 'welcome' },
+          { label: 'Mis recursos', section: 'resources' },
+          { label: 'Subir recursos', section: 'upload' },
+          { label: 'Recursos Compartidos', section: 'shared' },
+          { label: 'Perfil', section: 'profile' },
+        ].map(item => (
+          <li key={item.section} className="nav-item my-1">
+            <a href="#" onClick={() => showSection(item.section)} className="nav-link text-white px-2">
+              {item.label}
+            </a>
+          </li>
+        ))}
+        <li className="nav-item px-0"><a href="https://tubiblioteca.utp.edu.pe" className="nav-link text-white">UTP+biblio</a></li>
+        <li className="nav-item px-0"><a href="#" className="nav-link text-white">Ayuda</a></li>
+      </ul>
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-grow-1 p-4 bg-light">
+      {activeSection === 'welcome' && (
+        <div className="text-center mt-5">
+          <h2 className="fw-bold">¡Bienvenido, {user.nombre_rol}!</h2>
+          <p className="text-muted">Nos alegra tenerte de vuelta.</p>
+        </div>
+      )}
+
+      {activeSection === 'profile' && (
+        <div className="container mt-4">
+          <h3 className="text-center mb-4">Perfil de Usuario</h3>
+          <div className="card shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
+            <div className="card-body">
+              <form>
+                <div className="mb-3">
+                  <label className="form-label">Foto de perfil</label>
+                  <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Nombre</label>
+                  <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Correo</label>
+                  <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Nueva contraseña</label>
+                  <input type="password" className="form-control" name="password" value={user.password} onChange={handleChange} disabled={!isEditing} placeholder="Escribe una nueva contraseña si deseas cambiarla" />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Rol</label>
+                  <input type="text" className="form-control" value={user.nombre_rol} readOnly />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Área de interés</label>
+                  <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
+                </div>
+                <div className="text-center mt-4">
+                  <button type="button" className="btn btn-primary" onClick={handleEdit}>
+                    {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeSection === 'upload' && (
+        <ResourceUpload 
+          courses={courses} 
+          categories={categories} 
+          onUploadSuccess={handleUploadSuccess} 
+        />
+      )}
+
+      {activeSection === 'resources' && userId && (
+        <ResourceList userId={userId} courses={courses} categories={categories} />
+      )}
+
+      {activeSection === 'shared' && userId && (
+        <SharedResources userId={userId} />
+      )}
+    </div>
+  </div>
+
+  <style>{`
+    .sidebar.collapsed {
+      margin-left: -220px;
+    }
+    .sidebar {
+      transition: all 0.3s ease;
+    }
+  `}</style>
+</div>
+
   );
 }
 
