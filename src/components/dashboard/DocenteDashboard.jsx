@@ -9,21 +9,10 @@ import ResourceUpload from '../docente/ResourceUpload';
 
 function Dashboard() {
   
-  const handleUploadSuccess = (uploadedResource) => {
-    // Puedes hacer varias cosas aquí:
-    // 1. Mostrar un mensaje de éxito
-    alert('Recurso subido correctamente');
-    
-    // 2. Actualizar la lista de recursos (si usas estado)
-    // setResources(prev => [...prev, uploadedResource]);
-    
-    // 3. Redirigir a otra sección
-    // setActiveSection('resources');
-  };
-
+  const [resources, setResources] = useState([]);
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const userId = localStorage.getItem('userId'); // Asegúrate de guardar esto en el login
+  const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('welcome');
@@ -36,6 +25,28 @@ function Dashboard() {
     foto_perfil: '',
     password: ''
   });
+
+  // Función para manejar el éxito en la subida de recursos
+  const handleUploadSuccess = (uploadedResource) => {
+    // Actualizar la lista de recursos
+    setResources(prev => [...prev, uploadedResource]);
+    // Mostrar mensaje de éxito
+    alert('Recurso subido correctamente');
+    // Cambiar a la vista de recursos
+    setActiveSection('resources');
+  };
+
+  // Función para manejar la eliminación de recursos
+  const handleDeleteResource = (id) => {
+    setResources(prev => prev.filter(resource => resource.id_recurso !== id));
+  };
+
+  // Función para manejar la actualización de recursos
+  const handleUpdateResource = (updatedResource) => {
+    setResources(prev => prev.map(resource => 
+      resource.id_recurso === updatedResource.id_recurso ? updatedResource : resource
+    ));
+  };
 
   const token = localStorage.getItem('token');
 
@@ -301,15 +312,21 @@ function Dashboard() {
           
           <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             {activeSection === 'upload' && (
-              <ResourceUpload 
+              <ResourceUpload
                 courses={courses} 
                 categories={categories} 
-                onUploadSuccess={handleUploadSuccess}  // Pasa la función definida
+                onUploadSuccess={handleUploadSuccess}
               />
             )}
 
             {activeSection === 'resources' && userId && (
-              <ResourceList userId={userId} courses={courses} categories={categories} />
+              <ResourceList 
+                userId={userId} 
+                courses={courses} 
+                categories={categories}
+                onDelete={handleDeleteResource}
+                onUpdate={handleUpdateResource}
+              />
             )}
 
             {activeSection === 'shared' && userId && (

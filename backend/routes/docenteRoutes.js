@@ -1,25 +1,39 @@
 
+// routes/docenteRoutes.js
 const express = require('express');
 const router = express.Router();
-const docenteController = require('../controllers/docenteController');
-const { verifyToken, isDocente } = require('../middlewares/authMiddleware');
+const upload = require('../middlewares/uploadMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
+const recursoController = require('../controllers/recursoController');
 
-// Middleware para verificar token y rol de docente
-router.use(verifyToken);
-router.use(isDocente);
+// Ruta para subir recursos
+router.post('/subir-recurso', verifyToken, upload.single('archivo'), recursoController.subirRecurso);
 
-// Rutas para recursos del docente
-router.get('/recursos', docenteController.getRecursosDocente);
-router.get('/recursos-compartidos', docenteController.getRecursosCompartidos);
-router.get('/datos-utiles', docenteController.getCursosYCategorias);
+// Clasificación por curso y categoría
+// Esto se maneja en el mismo formulario de subida. Pero necesitas rutas para obtener cursos y categorías
+router.get('/datos-utiles', verifyToken, async (req, res) => {
+  try {
+    const [cursos] = await pool.query('SELECT * FROM cursos');
+    const [categorias] = await pool.query('SELECT * FROM categorias');
 
-// Ruta para subir recurso (con middleware de multer)
-router.post('/subir-recurso', 
-  docenteController.uploadRecurso.single('archivo'), 
-  docenteController.subirRecurso
-);
+    res.json({ cursos, categorias });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener datos' });
+  }
+});
 
-// Ruta para eliminar recurso
-router.delete('/eliminar-recurso/:id_recurso', docenteController.eliminarRecurso);
+// Gestión de recursos subidos
+router.get('/mis-recursos', verifyToken, recursoController.obtenerMisRecursos);
+router.put('/recurso/:id', verifyToken, recursoController.editarRecurso);
+router.delete('/recurso/:id', verifyToken, recursoController.eliminarRecurso);
+
+// Ver recursos compartidos por otros docentes
+router.get('/recursos-compartidos', verifyToken, recursoController.obtenerRecursosPublicos);
+
+// Rutas para descargar (opcional)
+router.get('/descargar/:filename', (req, res) => {
+  const file = path.join(__dirname, '..', 'uploads/recursos', req.params.filename);
+  res.download(file);
+});
 
 module.exports = router;
