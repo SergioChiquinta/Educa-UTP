@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
 
 import ResourceUpload from "../docente/ResourceUpload";
@@ -16,7 +16,6 @@ function Dashboard() {
 
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const userId = localStorage.getItem("userId"); // Asegúrate de guardar esto en el login
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("welcome");
@@ -167,6 +166,13 @@ function Dashboard() {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
+  const handleEditChange = (e) => {
+  const { name, value } = e.target;
+  setEditForm((prevForm) => ({
+    ...prevForm,
+    [name]: value
+  }));
+};
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -447,13 +453,14 @@ function Dashboard() {
               onUploadSuccess={handleUploadSuccess}
             />
           )}
-          {activeSection === "resources" && userId && (
+          {activeSection === "resources" && (
             <ResourceList
-              userId={userId}
+              
               courses={courses}
               categories={categories}
-              onDelete={handleDeleteResource}
-              onUpdate={handleUpdateResource}
+              onChange={handleEditChange}
+              
+              
             />
           )}
           {activeSection === "shared" && userId && (
