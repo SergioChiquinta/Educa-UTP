@@ -103,7 +103,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               accept=".pdf,.docx,.pptx"
               required
             />
-            <small className="form-text text-muted">Formatos aceptados: PDF, DOCX, PPTX (Máx. 40MB)</small>
+            <small className="form-text text-muted">Formatos aceptados: PDF, DOCX, PPTX (Máx. 40Mb)</small>
           </div>
           <div className="row mb-4">
             <div className="col-md-6">
