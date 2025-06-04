@@ -209,13 +209,18 @@ function Dashboard() {
 
   // Sidebar Diseño
   useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (sidebarCollapsed && isMobile) {
-      document.body.classList.remove("sidebar-open");
-    } else if (!sidebarCollapsed && isMobile) {
-      document.body.classList.add("sidebar-open");
-    }
-  }, [sidebarCollapsed]);
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 767;
+      if (isMobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">

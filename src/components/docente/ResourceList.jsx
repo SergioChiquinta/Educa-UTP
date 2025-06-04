@@ -5,6 +5,8 @@ import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
+import "./ResourceList.css";
+
 const ResourceList = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -147,7 +149,7 @@ const ResourceList = () => {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div className="container mt-4 px-0">
+    <div className="container mt-4 mt-4">
       <h2 className="mb-4">Mis Recursos</h2>
       
       {resources.length === 0 ? (
@@ -155,16 +157,16 @@ const ResourceList = () => {
       ) : (
         <div className="table-responsive">
           <table className="table table-bordered table-hover align-middle mb-0">
-            <thead className="table-dark">
+            <thead className="table-dark d-md-table-header-group">
               <tr>
-                <th scope="col" style={{ minWidth: '150px' }}>Título</th>
-                <th scope="col" style={{ minWidth: '100px' }} className="d-md-table-cell">Descripción</th>
-                <th scope="col" style={{ minWidth: '120px' }} className="d-sm-table-cell">Curso</th>
-                <th scope="col" style={{ minWidth: '120px' }} className="d-md-table-cell">Categoría</th>
-                <th scope="col" style={{ minWidth: '80px' }}>Tipo</th>
-                <th scope="col" style={{ minWidth: '100px' }} className="d-sm-table-cell">Fecha</th>
-                <th scope="col" style={{ minWidth: '120px' }}>Acciones</th>
-              </tr>
+                <th scope="col">Título</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Categoría</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Acciones</th>
+             </tr>
             </thead>
             <tbody>
               {resources.map(resource => (
@@ -182,7 +184,7 @@ const ResourceList = () => {
                       <span className="d-md-inline">{resource.titulo}</span>
                     )}
                   </td>
-                  <td className="d-md-table-cell" data-label="Descripción">
+                  <td data-label="Descripción">
                     {editingId === resource.id_recurso ? (
                       <textarea
                         className="form-control form-control-sm"
@@ -195,7 +197,7 @@ const ResourceList = () => {
                       <span>{resource.descripcion || 'Sin descripción'}</span>
                     )}
                   </td>
-                  <td className="d-sm-table-cell" data-label="Curso">
+                  <td data-label="Curso">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
@@ -213,7 +215,7 @@ const ResourceList = () => {
                       <span>{resource.nombre_curso}</span>
                     )}
                   </td>
-                  <td className="d-md-table-cell" data-label="Categoría">
+                  <td data-label="Categoría">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
