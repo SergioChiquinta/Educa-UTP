@@ -174,6 +174,9 @@ exports.updateProfilePicture = (req, res) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se recibió ninguna imagen' });
+    }
     const userId = decoded.id;
     const profileImage = req.file.filename;
 
