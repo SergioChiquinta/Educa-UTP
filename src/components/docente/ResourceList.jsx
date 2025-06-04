@@ -1,4 +1,5 @@
 
+
 // src/components/docente/ResourceList.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -6,6 +7,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const ResourceList = () => {
+  
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,16 +31,19 @@ const ResourceList = () => {
           {
             headers: { 
               Authorization: `Bearer ${token}`,
-              'Cache-Control': 'no-cache'
+              
             }
           }
         );
+        console.log('Recursos recibidos:', response.data); 
 
+        setResources(response.data);
+        
+     
         if (!response.data || !Array.isArray(response.data)) {
           throw new Error('Formato de respuesta inválido');
         }
-
-        setResources(response.data);
+         
         
       } catch (err) {
         console.error('Error al cargar recursos:', {
@@ -56,30 +61,92 @@ const ResourceList = () => {
     fetchResources();
   }, [token]);
 
-  const handleDelete = async (resourceId) => {
-    try {
-      await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setResources(resources.map(resource => 
-        resource.id_recurso === id ? { 
-          ...resource, 
-          titulo: editForm.titulo,
-          descripcion: editForm.descripcion,
-          id_categoria: editForm.id_categoria,
-          id_curso: editForm.id_curso,
-          nombre_categoria: resources.find(r => r.id_categoria === editForm.id_categoria)?.nombre_categoria || resource.nombre_categoria,
-          nombre_curso: resources.find(r => r.id_curso === editForm.id_curso)?.nombre_curso || resource.nombre_curso
-        } : resource
-      ));
-      
-      setEditingId(null);
-    } catch (err) {
-      console.error('Error al editar recurso:', err);
-      setError('No se pudo actualizar el recurso');
-    }
-  };
+  const handleDelete = (resourceId) => {
+  confirmAlert({
+    title: '¿Estás seguro?',
+    message: 'Esta acción eliminará el recurso permanentemente.',
+    buttons: [
+      {
+        label: 'Sí, eliminar',
+        onClick: async () => {
+          try {
+            await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setResources(prev => prev.filter(resource => resource.id_recurso !== resourceId));
+            setEditingId(null);
+          } catch (err) {
+            console.error('Error al editar recurso:', err);
+            setError('No se pudo actualizar el recurso');
+          }
+        }
+      },
+      {
+        label: 'Cancelar'
+        // No se hace nada, solo cierra
+      }
+    ]
+  });
+};
+
+  const saveEdit = async (id) => {
+  try {
+    await axios.put(`http://localhost:3000/api/docente/recurso/${id}`, {
+      titulo: editForm.titulo,
+      descripcion: editForm.descripcion,
+      id_categoria: editForm.id_categoria,
+      id_curso: editForm.id_curso
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // ✅ Actualizar recurso en la tabla
+    setResources(resources.map(resource => 
+      resource.id_recurso === id ? { 
+        ...resource,
+        titulo: editForm.titulo,
+        descripcion: editForm.descripcion,
+        id_categoria: editForm.id_categoria,
+        id_curso: editForm.id_curso,
+        nombre_categoria: resources.find(r => r.id_categoria === editForm.id_categoria)?.nombre_categoria || resource.nombre_categoria,
+        nombre_curso: resources.find(r => r.id_curso === editForm.id_curso)?.nombre_curso || resource.nombre_curso
+      } : resource
+    ));
+
+    setEditingId(null);
+  } catch (err) {
+    console.error('Error al editar recurso:', err);
+    setError('No se pudo actualizar el recurso');
+  }
+};
+
+const handleEditChange = (e) => {
+  const { name, value } = e.target;
+  setEditForm((prevForm) => ({
+    ...prevForm,
+    [name]: value
+  }));
+};
+
+
+const startEditing = (resource) => {
+  setEditingId(resource.id_recurso);
+  setEditForm({
+    titulo: resource.titulo,
+    descripcion: resource.descripcion,
+    id_categoria: resource.id_categoria,
+    id_curso: resource.id_curso
+  });
+};
+
+const cancelEditing = () => {
+  setEditingId(null);
+  setEditForm({ titulo: '', descripcion: '', id_categoria: '', id_curso: '' });
+};
+
+
+
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
