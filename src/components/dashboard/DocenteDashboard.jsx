@@ -236,36 +236,53 @@ function Dashboard() {
           <ul className="dropdown-menu dropdown-menu-end mt-2">
             <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
           </ul>
-        </div>
-      </nav>
-  
-      <div className="d-flex flex-grow-1">
-        {/* Sidebar */}
-        <div className={`bg-dark text-white sidebar shadow-sm ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', transition: 'all 0.3s' }}>
-          <h5 className="text-center py-3 border-bottom border-secondary">📁 Menú</h5>
-          <ul className="nav flex-column px-3">
-            {[
-              { label: '🏠 Inicio', section: 'welcome' },
-              { label: '📚 Mis recursos', section: 'resources' },
-              { label: '⬆️ Subir recursos', section: 'upload' },
-              { label: '🔗 Recursos Compartidos', section: 'shared' },
-              { label: '👤 Perfil', section: 'profile' },
-            ].map(item => (
-              <li key={item.section} className="nav-item my-1">
-                <a
-                  href="#"
-                  onClick={() => showSection(item.section)}
-                  className="nav-link text-white px-2"
-                  style={{ transition: '0.2s', borderRadius: '5px' }}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-            <hr className="border-secondary my-2" />
-            <li className="nav-item px-0"><a href="https://tubiblioteca.utp.edu.pe" className="nav-link text-white">📖 UTP+biblio</a></li>
-            <li className="nav-item px-0"><a href="#" className="nav-link text-white">❓ Ayuda</a></li>
-          </ul>
+              </div>
+              </nav>
+          
+              <div className="d-flex flex-grow-1">
+                {/* Sidebar */}
+                <div className={`bg-dark text-white sidebar shadow-sm ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', transition: 'all 0.3s' }}>
+                <h5 className="text-center py-3 border-bottom border-secondary text-white">
+                <i className="bi bi-folder2-open me-2" style={{ fontSize: '1.2rem' }}></i>
+                Menú
+              </h5>
+
+                  <ul className="nav flex-column px-3">
+                  {[
+                  { icon: 'bi-house-door', label: 'Inicio', section: 'welcome', color: '#ffc107' }, // amarillo
+                  { icon: 'bi-journal-bookmark', label: 'Mis recursos', section: 'resources', color: '#0d6efd' }, // azul
+                  { icon: 'bi-cloud-arrow-up', label: 'Subir recursos', section: 'upload', color: '#198754' }, // verde
+                  { icon: 'bi-share-fill', label: 'Recursos Compartidos', section: 'shared', color: '#6f42c1' }, // morado
+                  { icon: 'bi-person', label: 'Perfil', section: 'profile', color: '#fd7e14' }, // naranja
+                ].map(item => (
+                  <li key={item.section} className="nav-item my-1">
+                    <a
+                      href="#"
+                      onClick={() => showSection(item.section)}
+                      className="nav-link text-white px-2 d-flex align-items-center gap-2"
+                      style={{ transition: '0.2s', borderRadius: '5px' }}
+                    >
+                      <i className={`bi ${item.icon}`} style={{ color: item.color }}></i>
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+          <hr className="border-secondary my-2" />
+          <li className="nav-item px-0">
+          <a href="https://tubiblioteca.utp.edu.pe" className="nav-link text-white d-flex align-items-center gap-2">
+            <i className="bi bi-book" style={{ color: '#0dcaf0' }}></i>
+            UTP+biblio
+          </a>
+        </li>
+        <li className="nav-item px-0">
+          <a href="#" className="nav-link text-white d-flex align-items-center gap-2">
+            <i className="bi bi-question-circle" style={{ color: '#dc3545' }}></i>
+            Ayuda
+          </a>
+        </li>
+
+        </ul>
+
         </div>
   
         {/* Main Content */}
@@ -290,7 +307,11 @@ function Dashboard() {
   
           {activeSection === 'profile' && (
             <div className="container mt-5">
-              <h2 className="mb-4 text-center fw-bold text-dark">👤 Perfil de Usuario</h2>
+              <h2 className="mb-4 text-center fw-bold text-dark">
+  <i className="bi bi-person-circle me-2" style={{ fontSize: '2rem' }}></i>
+  Perfil de Usuario
+</h2>
+
               <div className="card mx-auto shadow-sm rounded-4" style={{ maxWidth: '600px' }}>
                 <div className="card-body">
                   <form>

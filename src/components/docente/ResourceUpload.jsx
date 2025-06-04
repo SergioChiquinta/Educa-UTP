@@ -97,19 +97,21 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   return (
     <div className="container mt-5">
       <h2 
-  className="text-center fw-bold mb-4" 
+  className="text-center fw-bold mb-4"
   style={{
     color: '#1b1f3b',
     fontSize: '2rem',
     borderBottom: '3px solid #1b1f3b',
-    display: 'inline-block',
+    display: 'inline-flex',
+    alignItems: 'center',
     paddingBottom: '8px',
     marginLeft: '430px',
-  }}>
-  📚 Subir Recurso Educativo
+    gap: '10px',
+  }}
+>
+  <i className="bi bi-book" style={{ color: '#0d6efd', fontSize: '1.6rem' }}></i>
+  Subir Recurso Educativo
 </h2>
-
-  
       <div className="card shadow rounded-4 border-0" style={{ backgroundColor: '#f9f9fc' }}>
         <div className="card-body p-4">
           {error && <div className="alert alert-danger">{error}</div>}
