@@ -5,6 +5,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
+  
+
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
@@ -32,6 +34,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
         setError('Solo se permiten archivos PDF, DOCX o PPTX');
         return;
       }
+      setError('');
       setFile(selectedFile);
       setFormData(prev => ({ ...prev, tipo_archivo: fileType }));
     }

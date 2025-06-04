@@ -5,6 +5,8 @@ const router = express.Router();
 const upload = require('../middlewares/uploadMiddleware');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const recursoController = require('../controllers/recursoController');
+const pool = require('../models/db'); // <-- Agrega esta línea
+
 
 // Ruta para subir recursos
 router.post('/subir-recurso', verifyToken, upload.single('archivo'), recursoController.subirRecurso);
@@ -18,6 +20,8 @@ router.get('/datos-utiles', verifyToken, async (req, res) => {
 
     res.json({ cursos, categorias });
   } catch (error) {
+    console.error('Error en /datos-utiles:', error); // <-- Añade este console.error para ver el detalle
+
     res.status(500).json({ error: 'Error al obtener datos' });
   }
 });
