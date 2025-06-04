@@ -1,17 +1,18 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
-
 import ResourceUpload from "../docente/ResourceUpload";
+
+import "./Dashboard.css";
 
 function Dashboard() {
   const handleUploadSuccess = (uploadedResource) => {
     toast.success("Recurso subido correctamente");
-    setActiveSection("resources"); // Redirige a la lista de recursos
-    // Si necesitas actualizar la lista de recursos, puedes hacerlo aquí
+    setActiveSection("resources"); // Redirige a la lista de recursos actualizada
   };
 
   const [courses, setCourses] = useState([]);
@@ -206,8 +207,18 @@ function Dashboard() {
     }
   };
 
+  // Sidebar Diseño
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    if (sidebarCollapsed && isMobile) {
+      document.body.classList.remove("sidebar-open");
+    } else if (!sidebarCollapsed && isMobile) {
+      document.body.classList.add("sidebar-open");
+    }
+  }, [sidebarCollapsed]);
+
   return (
-    <div className="d-flex flex-column vh-100">
+    <div className="container-fluid p-0 d-flex flex-column vh-100">
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
         <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
@@ -455,16 +466,13 @@ function Dashboard() {
           )}
           {activeSection === "resources" && (
             <ResourceList
-              
               courses={courses}
               categories={categories}
               onChange={handleEditChange}
-              
-              
             />
           )}
-          {activeSection === "shared" && userId && (
-            <SharedResouces userId={userId} />
+          {activeSection === "shared" && (
+            <SharedResouces/>
           )}
         </div>
       </div>

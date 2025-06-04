@@ -1,22 +1,28 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function Dashboard() {
-  const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeSection, setActiveSection] = useState("welcome");
-  const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState({
-    nombre_completo: "",
-    correo: "",
-    nombre_rol: "",
-    area_interes: "",
-    foto_perfil: "",
-    password: "",
-  });
+import "./Dashboard.css";
 
-  const token = localStorage.getItem("token");
+function Dashboard() {
+    const [courses, setCourses] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const userId = localStorage.getItem("userId"); // Asegúrate de guardar esto en el login
+    const navigate = useNavigate();
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [activeSection, setActiveSection] = useState("welcome");
+    const [isEditing, setIsEditing] = useState(false);
+    const [user, setUser] = useState({
+      nombre_completo: "",
+      correo: "",
+      nombre_rol: "",
+      area_interes: "",
+      foto_perfil: "",
+      password: "",
+    });
+  
+    const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!token) {
@@ -166,21 +172,27 @@ function Dashboard() {
     }
   };
 
+  // Sidebar Diseño
+    useEffect(() => {
+      const isMobile = window.innerWidth <= 768;
+      if (sidebarCollapsed && isMobile) {
+        document.body.classList.remove("sidebar-open");
+      } else if (!sidebarCollapsed && isMobile) {
+        document.body.classList.add("sidebar-open");
+      }
+    }, [sidebarCollapsed]);
+
   return (
-    <div className="d-flex flex-column vh-100">
+    <div className="container-fluid p-0 d-flex flex-column vh-100">
       {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <button
-          className="btn btn-outline-primary me-3"
-          onClick={toggleSidebar}
-        >
+      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
+        <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
           ☰
         </button>
-        <div className="ms-auto d-flex align-items-center position-relative">
+        <div className="ms-auto d-flex align-items-center dropdown">
           <div
-            className="profile d-flex align-items-center"
+            className="d-flex align-items-center"
             data-bs-toggle="dropdown"
-            aria-expanded="false"
             style={{ cursor: "pointer" }}
           >
             <img
@@ -194,13 +206,15 @@ function Dashboard() {
                     )}&background=random&rounded=true&size=40`
               }
               alt="avatar"
-              className="rounded-circle"
+              className="rounded-circle border"
               width="40"
               height="40"
             />
-            <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
+            <span className="ms-2 fw-semibold text-dark">
+              {user.nombre_completo}
+            </span>
           </div>
-          <ul className="dropdown-menu dropdown-menu-end">
+          <ul className="dropdown-menu dropdown-menu-end mt-2">
             <li>
               <button className="dropdown-item" onClick={handleLogout}>
                 Cerrar sesión
@@ -209,18 +223,15 @@ function Dashboard() {
           </ul>
         </div>
       </nav>
-
       <div className="d-flex flex-grow-1">
         {/* Sidebar */}
         <div
-          className={`sidebar bg-dark ${sidebarCollapsed ? "collapsed" : ""}`}
-          style={{
-            minWidth: "220px",
-            maxWidth: "220px",
-            transition: "all 0.3s",
-          }}
+          className={`bg-dark text-white sidebar shadow-sm ${
+            sidebarCollapsed ? "collapsed" : ""
+          }`}
+          style={{ minWidth: "220px", transition: "all 0.3s" }}
         >
-           <h5 className="text-center py-3 border-bottom border-secondary text-white">
+          <h5 className="text-center py-3 border-bottom border-secondary text-white">
             <i
               className="bi bi-folder2-open me-2"
               style={{ fontSize: "1.2rem" }}
@@ -235,6 +246,12 @@ function Dashboard() {
                 section: "welcome",
                 color: "#FFC107",
               }, // amarillo
+              {
+                icon: "bi-share-fill",
+                label: "Recursos Compartidos",
+                section: "shared",
+                color: "#6F42C1",
+              }, // morado
               {
                 icon: "bi-person",
                 label: "Perfil",
@@ -281,17 +298,11 @@ function Dashboard() {
             </li>
           </ul>
         </div>
-
         {/* Main Content */}
-        <div
-          className={`content flex-grow-1 p-4 ${
-            sidebarCollapsed ? "full" : ""
-          }`}
-          style={{ transition: "margin-left 0.3s" }}
-        >
+        <div className="flex-grow-1 p-4 bg-light">
           {activeSection === "welcome" && (
             <div className="text-center mt-5">
-               <h2
+              <h2
                 className="fw-bold text-center"
                 style={{
                   color: "#1B1F3B",
@@ -303,10 +314,9 @@ function Dashboard() {
               >
                 ¡Bienvenido, {user.nombre_rol}!
               </h2>
-              <p className="text-muted">Nos alegra tenerte de vuelta.</p>
+              <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
             </div>
           )}
-
           {activeSection === "profile" && (
             <div className="container mt-5">
               <h2 className="mb-4 text-center fw-bold text-dark">
@@ -400,12 +410,21 @@ function Dashboard() {
               </div>
             </div>
           )}
+          {activeSection === "shared" && userId && (
+            <SharedResouces userId={userId} />
+          )}
         </div>
       </div>
-
+      {/* Estilo sidebar colapsado */}
       <style>{`
         .sidebar.collapsed {
           margin-left: -220px;
+        }
+        .sidebar {
+          transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+          background-color: rgba(255, 255, 255, 0.1);
         }
       `}</style>
     </div>

@@ -1,0 +1,90 @@
+
+/* Dashboard.css */
+
+/* Estilo base del sidebar */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  z-index: 1030;
+}
+
+/* Cuando está colapsado en desktop: solo íconos */
+.sidebar.collapsed {
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  overflow-x: hidden;
+}
+
+.sidebar.collapsed .nav-link span,
+.sidebar.collapsed h5 {
+  display: none;
+}
+
+/* Para móviles: mostrar como overlay */
+@media (max-width: 1136px) {
+  .sidebar {
+    position: fixed;
+    top: 56px; /* Altura del navbar */
+    left: 0;
+    height: calc(100% - 56px);
+    width: 220px;
+    transform: translateX(0);
+    background-color: #212529;
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Evitar scroll en fondo al abrir sidebar */
+  body.sidebar-open {
+    overflow: hidden;
+  }
+}
+
+/* Ajustes generales para contenido */
+.main-content {
+  flex-grow: 1;
+  padding: 1rem;
+  transition: margin-left 0.3s;
+}
+
+@media (min-width: 1137px) {
+  .main-content {
+    margin-left: 220px;
+  }
+
+  .sidebar.collapsed + .main-content {
+    margin-left: 70px;
+  }
+}
+
+/* Añade estos estilos */
+.main-content {
+  transition: margin-left 0.3s ease;
+  width: 100%;
+}
+
+.sidebar:not(.collapsed) + .main-content {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+.table-responsive {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .sidebar:not(.collapsed) + .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}

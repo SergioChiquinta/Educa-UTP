@@ -7,14 +7,13 @@ const fs = require('fs');
 // Configuración de Multer para recursos académicos
 const storageRecursos = multer.diskStorage({
   destination: function (req, file, cb) {
-
     const uploadDir = path.resolve(__dirname, '..', 'uploads', 'recursos');
     console.log('Ruta absoluta donde se guardará:', uploadDir);
-
 
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -209,7 +208,7 @@ exports.actualizarRecurso = async (req, res) => {
   try {
     const docenteId = req.user.id;
     const { id_recurso } = req.params;
-    const { titulo, descripcion } = req.body;
+    const { titulo, descripcion, id_curso, id_categoria } = req.body;
 
     // Verificar que el recurso pertenece al docente
     const [recurso] = await db.promise().query(
@@ -225,10 +224,18 @@ exports.actualizarRecurso = async (req, res) => {
       return res.status(403).json({ message: 'No autorizado para editar este recurso' });
     }
 
-    // Actualizar el recurso
+    // Validar que curso y categoría existen
+    const [curso] = await db.promise().query('SELECT id_curso FROM cursos WHERE id_curso = ?', [id_curso]);
+    const [categoria] = await db.promise().query('SELECT id_categoria FROM categorias WHERE id_categoria = ?', [id_categoria]);
+    
+    if (curso.length === 0 || categoria.length === 0) {
+      return res.status(400).json({ message: 'Curso o categoría no válidos' });
+    }
+
+    // Actualizar el recurso con todos los campos
     await db.promise().query(
-      'UPDATE recursos SET titulo = ?, descripcion = ? WHERE id_recurso = ?',
-      [titulo, descripcion, id_recurso]
+      'UPDATE recursos SET titulo = ?, descripcion = ?, id_curso = ?, id_categoria = ? WHERE id_recurso = ?',
+      [titulo, descripcion, id_curso, id_categoria, id_recurso]
     );
 
     // Obtener el recurso actualizado con información adicional
@@ -246,6 +253,9 @@ exports.actualizarRecurso = async (req, res) => {
     });
   } catch (error) {
     console.error('Error al actualizar recurso:', error);
-    res.status(500).json({ message: 'Error al actualizar recurso' });
+    res.status(500).json({ 
+      message: 'Error al actualizar recurso',
+      error: error.message 
+    });
   }
 };

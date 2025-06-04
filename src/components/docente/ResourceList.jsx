@@ -6,7 +6,9 @@ import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
 const ResourceList = () => {
-  
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -19,166 +21,155 @@ const ResourceList = () => {
   });
   const token = localStorage.getItem('token');
 
+  console.log('Cursos:', courses);
+  console.log('Categorías:', categories);
+
   useEffect(() => {
-    const fetchResources = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-        
-        const response = await axios.get(
-          'http://localhost:3000/api/docente/recursos',
-          {
-            headers: { 
-              Authorization: `Bearer ${token}`,
-              'Cache-Control': 'no-cache',
-            }
-          }
-        );
-        console.log('Recursos recibidos:', response.data); 
 
-        setResources(response.data);
-        
-     
-        if (!response.data || !Array.isArray(response.data)) {
-          throw new Error('Formato de respuesta inválido');
-        }
-         
-        
+        const [resourcesRes, datosUtilesRes] = await Promise.all([
+          axios.get('http://localhost:3000/api/docente/recursos', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:3000/api/docente/datos-utiles', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+
+        setResources(resourcesRes.data);
+        setCourses(datosUtilesRes.data.cursos);     // ← asegúrate que el backend devuelve esto
+        setCategories(datosUtilesRes.data.categorias);
+
       } catch (err) {
-        console.error('Error al cargar recursos:', {
-          error: err,
-          response: err.response
-        });
-        
-        setError(err.response?.data?.message || 
-                'Error al cargar los recursos. Intente recargar la página.');
+        console.error('Error al cargar datos:', err);
+        setError('Error al cargar los datos');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchResources();
+    fetchData();
   }, [token]);
 
   const handleDelete = (resourceId) => {
-  confirmAlert({
-    title: '¿Estás seguro?',
-    message: 'Esta acción eliminará el recurso permanentemente.',
-    buttons: [
-      {
-        label: 'Sí, eliminar',
-        onClick: async () => {
-          try {
-            await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+    confirmAlert({
+      title: '¿Estás seguro?',
+      message: 'Esta acción eliminará el recurso permanentemente.',
+      buttons: [
+        {
+          label: 'Sí, eliminar',
+          onClick: async () => {
+            try {
+              await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
 
-            setResources(prev => prev.filter(resource => resource.id_recurso !== resourceId));
-            setEditingId(null);
-          } catch (err) {
-            console.error('Error al editar recurso:', err);
-            setError('No se pudo actualizar el recurso');
+              setResources(prev => prev.filter(resource => resource.id_recurso !== resourceId));
+              setEditingId(null);
+            } catch (err) {
+              console.error('Error al editar recurso:', err);
+              setError('No se pudo actualizar el recurso');
+            }
           }
+        },
+        {
+          label: 'Cancelar'
+          // No se hace nada, solo cierra
         }
-      },
-      {
-        label: 'Cancelar'
-        // No se hace nada, solo cierra
-      }
-    ]
-  });
-};
+      ]
+    });
+  };
 
   const saveEdit = async (id) => {
-  try {
-    await axios.put(`http://localhost:3000/api/docente/recurso/${id}`, {
+    console.log('Datos a enviar:', {
       titulo: editForm.titulo,
       descripcion: editForm.descripcion,
       id_categoria: editForm.id_categoria,
       id_curso: editForm.id_curso
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
     });
+    try {
+      const response = await axios.put(
+        `http://localhost:3000/api/docente/recurso/${id}`,
+        {
+          titulo: editForm.titulo,
+          descripcion: editForm.descripcion,
+          id_categoria: editForm.id_categoria,
+          id_curso: editForm.id_curso
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-    // ✅ Actualizar recurso en la tabla
-    setResources(resources.map(resource => 
-      resource.id_recurso === id ? { 
-        ...resource,
-        titulo: editForm.titulo,
-        descripcion: editForm.descripcion,
-        id_categoria: editForm.id_categoria,
-        id_curso: editForm.id_curso,
-        nombre_categoria: resources.find(r => r.id_categoria === editForm.id_categoria)?.nombre_categoria || resource.nombre_categoria,
-        nombre_curso: resources.find(r => r.id_curso === editForm.id_curso)?.nombre_curso || resource.nombre_curso
-      } : resource
-    ));
+      // Actualizar el estado con los datos devueltos por el backend
+      setResources(resources.map(resource => 
+        resource.id_recurso === id ? response.data.recurso : resource
+      ));
 
+      setEditingId(null);
+    } catch (err) {
+      console.error('Error al editar recurso:', err);
+      setError(err.response?.data?.message || 'No se pudo actualizar el recurso');
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prevForm) => ({
+      ...prevForm,
+      [name]: value
+    }));
+  };
+
+  const startEditing = (resource) => {
+    setEditingId(resource.id_recurso);
+    setEditForm({
+      titulo: resource.titulo,
+      descripcion: resource.descripcion,
+      id_categoria: String(resource.id_categoria),
+      id_curso: String(resource.id_curso)
+    });
+  };
+
+  const cancelEditing = () => {
     setEditingId(null);
-  } catch (err) {
-    console.error('Error al editar recurso:', err);
-    setError('No se pudo actualizar el recurso');
-  }
-};
-
-const handleEditChange = (e) => {
-  const { name, value } = e.target;
-  setEditForm((prevForm) => ({
-    ...prevForm,
-    [name]: value
-  }));
-};
-
-
-const startEditing = (resource) => {
-  setEditingId(resource.id_recurso);
-  setEditForm({
-    titulo: resource.titulo,
-    descripcion: resource.descripcion,
-    id_categoria: resource.id_categoria,
-    id_curso: resource.id_curso
-  });
-};
-
-const cancelEditing = () => {
-  setEditingId(null);
-  setEditForm({ titulo: '', descripcion: '', id_categoria: '', id_curso: '' });
-};
-
-
-
+    setEditForm({ titulo: '', descripcion: '', id_categoria: '', id_curso: '' });
+  };
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
-  if (loading) return <div className="text-center mt-4">Cargando...</div>;
+  if (loading) return <div className="text-center">Cargando...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 px-0">
       <h2 className="mb-4">Mis Recursos</h2>
       
       {resources.length === 0 ? (
         <div className="alert alert-info">No has subido ningún recurso aún.</div>
       ) : (
         <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
+          <table className="table table-bordered table-hover align-middle mb-0">
+            <thead className="table-dark">
               <tr>
-                <th>Título</th>
-                <th>Descripción</th>
-                <th>Curso</th>
-                <th>Categoría</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
+                <th scope="col" style={{ minWidth: '150px' }}>Título</th>
+                <th scope="col" style={{ minWidth: '100px' }} className="d-md-table-cell">Descripción</th>
+                <th scope="col" style={{ minWidth: '120px' }} className="d-sm-table-cell">Curso</th>
+                <th scope="col" style={{ minWidth: '120px' }} className="d-md-table-cell">Categoría</th>
+                <th scope="col" style={{ minWidth: '80px' }}>Tipo</th>
+                <th scope="col" style={{ minWidth: '100px' }} className="d-sm-table-cell">Fecha</th>
+                <th scope="col" style={{ minWidth: '120px' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {resources.map(resource => (
                 <tr key={resource.id_recurso}>
-                  <td>
+                  <td data-label="Título">
                     {editingId === resource.id_recurso ? (
                       <input
                         type="text"
@@ -188,10 +179,10 @@ const cancelEditing = () => {
                         onChange={handleEditChange}
                       />
                     ) : (
-                      resource.titulo
+                      <span className="d-md-inline">{resource.titulo}</span>
                     )}
                   </td>
-                  <td>
+                  <td className="d-md-table-cell" data-label="Descripción">
                     {editingId === resource.id_recurso ? (
                       <textarea
                         className="form-control form-control-sm"
@@ -201,79 +192,85 @@ const cancelEditing = () => {
                         rows="2"
                       />
                     ) : (
-                      resource.descripcion || 'Sin descripción'
+                      <span>{resource.descripcion || 'Sin descripción'}</span>
                     )}
                   </td>
-                  <td>
+                  <td className="d-sm-table-cell" data-label="Curso">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
-                        name="id_curso"
                         value={editForm.id_curso}
-                        onChange={handleEditChange}
+                        onChange={(e) => setEditForm({ ...editForm, id_curso: e.target.value })}
                       >
-                        {resources.map(r => (
-                          <option key={r.id_curso} value={r.id_curso}>
-                            {r.nombre_curso}
+                        <option value="">-- Selecciona --</option>
+                        {courses.map((curso) => (
+                          <option key={curso.id_curso} value={curso.id_curso}>
+                            {curso.nombre_curso}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      resource.nombre_curso
+                      <span>{resource.nombre_curso}</span>
                     )}
                   </td>
-                  <td>
+                  <td className="d-md-table-cell" data-label="Categoría">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
-                        name="id_categoria"
                         value={editForm.id_categoria}
-                        onChange={handleEditChange}
+                        onChange={(e) => setEditForm({ ...editForm, id_categoria: e.target.value })}
                       >
-                        {resources.map(r => (
-                          <option key={r.id_categoria} value={r.id_categoria}>
-                            {r.nombre_categoria}
+                        <option value="">-- Selecciona --</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id_categoria} value={cat.id_categoria}>
+                            {cat.nombre_categoria}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      resource.nombre_categoria
+                      <span>{resource.nombre_categoria}</span>
                     )}
                   </td>
-                  <td>{resource.tipo_archivo}</td>
-                  <td>{formatDate(resource.fecha_subida)}</td>
-                  <td>
-                    {editingId === resource.id_recurso ? (
-                      <>
-                        <button 
-                          className="btn btn-success btn-sm me-1"
-                          onClick={() => saveEdit(resource.id_recurso)}
-                        >
-                          Guardar
-                        </button>
-                        <button 
-                          className="btn btn-secondary btn-sm"
-                          onClick={cancelEditing}
-                        >
-                          Cancelar
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button 
-                          className="btn btn-primary btn-sm me-1"
-                          onClick={() => startEditing(resource)}
-                        >
-                          Editar
-                        </button>
-                        <button 
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(resource.id_recurso)}
-                        >
-                          Eliminar
-                        </button>
-                      </>
-                    )}
+                  <td data-label="Tipo">
+                    <span className="badge bg-secondary">{resource.tipo_archivo}</span>
+                  </td>
+                  <td className="d-sm-table-cell" data-label="Fecha">
+                    <span className="text-nowrap">{formatDate(resource.fecha_subida)}</span>
+                  </td>
+                  <td data-label="Acciones">
+                    <div className="d-flex gap-1">
+                      {editingId === resource.id_recurso ? (
+                        <>
+                          <button 
+                            className="btn btn-success btn-sm"
+                            onClick={() => saveEdit(resource.id_recurso)}
+                          >
+                            <i className="bi bi-check"></i>
+                          </button>
+                          <button 
+                            className="btn btn-secondary btn-sm"
+                            onClick={cancelEditing}
+                          >
+                            <i className="bi bi-x"></i>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={() => startEditing(resource)}
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </button>
+                          <button 
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(resource.id_recurso)}
+                          >
+                            <i className="bi bi-trash"></i>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -281,6 +278,8 @@ const cancelEditing = () => {
           </table>
         </div>
       )}
+
+      
     </div>
   );
 };
