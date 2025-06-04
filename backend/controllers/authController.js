@@ -3,30 +3,60 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models/db');
 
-// Función para ingresar/login
-exports.login = (req, res) => {
-  const { correo, password } = req.body;
+// === LOGIN ===
+// Función mejorada de login
+exports.login = async (req, res) => {
+  try {
+    const { correo, password } = req.body;
 
-  db.query('SELECT * FROM usuarios WHERE correo = ?', [correo], (err, results) => {
-    if (err) return res.status(500).json({ message: 'Error de servidor' });
-    if (results.length === 0) return res.status(401).json({ message: 'Credenciales inválidas' });
+    const query = `
+      SELECT u.id_usuario, u.nombre_completo, u.correo, u.contrasena, 
+             r.nombre_rol, u.foto_perfil, u.area_interes
+      FROM usuarios u
+      JOIN roles r ON u.id_rol = r.id_rol
+      WHERE u.correo = ? AND u.estado = TRUE
+    `;
 
-    const user = results[0];
+    const [users] = await db.promise().query(query, [correo]);
+    
+    if (users.length === 0) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
 
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) return res.status(500).json({ message: 'Error en el servidor' });
-      if (!isMatch) return res.status(401).json({ message: 'Contraseña incorrecta' });
+    const user = users[0];
+    const isMatch = await bcrypt.compare(password, user.contrasena.toString());
 
-      // Si es correcto, generamos un JWT
-      const token = jwt.sign({ id: user.id, rol: user.rol }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
 
-      return res.json({
-        message: `Bienvenido ${user.rol}`,
-        rol: user.rol,
-        token
-      });
+    const token = jwt.sign(
+      { 
+        id: user.id_usuario, 
+        rol: user.nombre_rol,
+        nombre: user.nombre_completo,
+        correo: user.correo
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '8h' }
+    );
+
+    res.json({
+      message: `Bienvenido ${user.nombre_completo}`,
+      token,
+      user: {
+        id: user.id_usuario,
+        nombre: user.nombre_completo,
+        correo: user.correo,
+        rol: user.nombre_rol,
+        foto_perfil: user.foto_perfil ? `${process.env.BASE_URL}/uploads/${user.foto_perfil}` : null,
+        area_interes: user.area_interes
+      }
     });
-  });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
 };
 
 // Función para obtener perfil
@@ -38,13 +68,27 @@ exports.getProfile = (req, res) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
     const userId = decoded.id;
-    db.query('SELECT id, nombre, correo, rol, foto_perfil, CHAR_LENGTH(password) AS passwordLength FROM usuarios WHERE id = ?', [userId], (err, results) => {
+
+    const query = `
+      SELECT u.id_usuario, u.nombre_completo, u.correo, r.nombre_rol, 
+             u.area_interes, u.estado, u.fecha_registro, u.foto_perfil
+      FROM usuarios u
+      JOIN roles r ON u.id_rol = r.id_rol
+      WHERE u.id_usuario = ?
+    `;
+
+    db.query(query, [userId], (err, results) => {
       if (err) return res.status(500).json({ message: 'Error de servidor' });
       if (results.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
-    
-      res.json(results[0]);
+
+      const userData = results[0];
+      // Asegúrate de incluir la URL completa de la imagen si existe
+      if (userData.foto_perfil) {
+        userData.foto_perfil = `${process.env.BASE_URL}/uploads/${userData.foto_perfil}`;
+      }
+      
+      res.json(userData);
     });
-    
   });
 };
 
@@ -57,33 +101,35 @@ exports.updateProfile = (req, res) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
     const userId = decoded.id;
-    const { nombre, correo, password } = req.body; // ⚡ No aceptamos rol aquí.
+    const { nombre_completo, correo, password, area_interes } = req.body;
 
-    if (!nombre || !correo) {
+    if (!nombre_completo || !correo) {
       return res.status(400).json({ message: 'Nombre y correo son obligatorios' });
     }
 
     if (password && password.trim() !== '') {
-      // Si hay nueva contraseña
       bcrypt.hash(password, 10, (err, hash) => {
         if (err) return res.status(500).json({ message: 'Error al encriptar la contraseña' });
 
         db.query(
-          'UPDATE usuarios SET nombre = ?, correo = ?, password = ? WHERE id = ?',
-          [nombre, correo, hash, userId],
-          (err, result) => {
+          'UPDATE usuarios SET nombre_completo = ?, correo = ?, contrasena = ?, area_interes = ? WHERE id_usuario = ?',
+          [nombre_completo, correo, hash, area_interes, userId],
+          (err) => {
             if (err) return res.status(500).json({ message: 'Error al actualizar el perfil' });
             res.json({ message: 'Perfil actualizado exitosamente' });
           }
         );
       });
     } else {
-      // No cambia contraseña
+      // En authController.js, modifica updateProfile:
       db.query(
-        'UPDATE usuarios SET nombre = ?, correo = ? WHERE id = ?',
-        [nombre, correo, userId],
-        (err, result) => {
-          if (err) return res.status(500).json({ message: 'Error al actualizar el perfil' });
+        'UPDATE usuarios SET nombre_completo = ?, correo = ?, area_interes = ? WHERE id_usuario = ?',
+        [nombre_completo, correo, area_interes, userId],
+        (err) => {
+          if (err) {
+            console.error('Error SQL:', err);
+            return res.status(500).json({ message: 'Error al actualizar el perfil' });
+          }
           res.json({ message: 'Perfil actualizado exitosamente' });
         }
       );
@@ -96,17 +142,10 @@ exports.resetPassword = (req, res) => {
   const { correo } = req.body;
 
   db.query('SELECT * FROM usuarios WHERE correo = ?', [correo], (err, results) => {
-    if (err) {
-      console.error('Error al buscar el usuario:', err);
-      return res.status(500).json({ message: 'Error del servidor' });
-    }
+    if (err) return res.status(500).json({ message: 'Error del servidor' });
+    if (results.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    // Simulando envío de correo
-    return res.status(200).json({ message: 'Se ha enviado un correo de recuperación (simulado).' });
+    res.status(200).json({ message: 'Correo de recuperación enviado (simulado)' });
   });
 };
 
@@ -135,20 +174,23 @@ exports.updateProfilePicture = (req, res) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se recibió ninguna imagen' });
+    }
     const userId = decoded.id;
     const profileImage = req.file.filename;
 
     db.query(
-      'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
+      'UPDATE usuarios SET foto_perfil = ? WHERE id_usuario = ?',
       [profileImage, userId],
-      (err, result) => {
-        if (err) return res.status(500).json({ message: 'Error al actualizar la foto de perfil' });
+      (err) => {
+        if (err) return res.status(500).json({ message: 'Error al actualizar la foto' });
 
-        // Aquí asegúrate de enviar la URL completa
-        const imageUrl = `http://localhost:3000/uploads/${profileImage}`;
-        res.json({ message: 'Foto de perfil actualizada exitosamente', profileImage: imageUrl });
+        res.json({ 
+          message: 'Foto actualizada exitosamente',
+          filename: profileImage // Asegúrate de enviar solo el nombre del archivo
+        });
       }
     );
   });
 };
-

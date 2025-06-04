@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function FormLogin() {
   const navigate = useNavigate();
@@ -10,48 +12,63 @@ function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await axios.post('http://localhost:3000/api/login', { correo, password });
-      const { token, rol } = response.data;
-      localStorage.setItem('token', token);
+      const { token, user } = response.data;
 
-      if (rol === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (rol === 'docente') {
-        navigate('/docente-dashboard');
-      } else if (rol === 'estudiante') {
-        navigate('/estudiante-dashboard');
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      toast.success(`Bienvenido ${user.nombre}`);
+
+      switch (user.rol) {
+        case 'admin':
+          navigate('/admin-dashboard');
+          break;
+        case 'docente':
+          navigate('/docente-dashboard');
+          break;
+        case 'estudiante':
+          navigate('/estudiante-dashboard');
+          break;
+        default:
+          navigate('/');
       }
     } catch (error) {
-      console.error('Error de inicio de sesión', error.response?.data?.message || error.message);
-      alert('Correo o contraseña incorrectos');
+      const message = error.response?.data?.message || 'Error de conexión';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleResetPassword = async (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
+    if (!resetEmail) {
+      toast.warn('Por favor ingresa tu correo electrónico.');
+      return;
+    }
+
     try {
       await axios.post('http://localhost:3000/api/reset-password', { correo: resetEmail });
-      alert('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.');
+      toast.success('Si el correo está registrado, recibirás instrucciones.');
       setShowResetPassword(false);
       setResetEmail('');
     } catch (error) {
-      console.error('Error al restablecer contraseña', error.response?.data?.message || error.message);
-      alert('Error al intentar restablecer la contraseña.');
+      toast.error(error.response?.data?.message || 'Error al enviar la solicitud');
     }
   };
 
   return (
     <>
+      <ToastContainer position="top-center" autoClose={3000} />
       {!showResetPassword ? (
-        <form onSubmit={handleSubmit} autoComplete="off" noValidate>
+        <form onSubmit={handleLogin} autoComplete="off" noValidate>
           {/* Email field */}
           <div className="mb-3 position-relative">
             <label htmlFor="correo" className="form-label fw-semibold">
@@ -67,7 +84,6 @@ function FormLogin() {
             />
             <i className="fas fa-user input-icon" style={{ top: '75%' }}></i>
           </div>
-
           {/* Password field */}
           <div className="mb-3 position-relative">
             <label htmlFor="password" className="form-label fw-semibold">
@@ -85,13 +101,12 @@ function FormLogin() {
               <span
                 className="input-group-text"
                 style={{ cursor: "pointer" }}
-                onClick={togglePasswordVisibility}
+                onClick={() => setShowPassword(!showPassword)}
               >
                 <i className={`fas ${showPassword ? "fa-eye" : "fa-eye-slash"}`}></i>
               </span>
             </div>
           </div>
-
           {/* Reset password link */}
           <div className="text-end mb-4">
             <a
@@ -102,20 +117,24 @@ function FormLogin() {
               ¿Olvidaste tu contraseña?
             </a>
           </div>
-
           {/* Submit button */}
           <button
             type="submit"
+            disabled={isLoading}
             className="btn btn-secondary w-100 py-2 fw-semibold"
             style={{ fontSize: '0.9rem' }}
           >
-            Iniciar sesión
+            {isLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                Procesando...
+              </>
+            ) : 'Iniciar sesión'}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleResetPassword} autoComplete="off" noValidate>
+        <form onSubmit={handleReset} autoComplete="off" noValidate>
           <h5 className="text-center mb-4">Restablecer contraseña</h5>
-
           {/* Reset Email field */}
           <div className="mb-3 position-relative">
             <label htmlFor="resetEmail" className="form-label fw-semibold">
@@ -130,7 +149,6 @@ function FormLogin() {
               required
             />
           </div>
-
           {/* Buttons */}
           <div className="d-flex justify-content-between">
             <button
