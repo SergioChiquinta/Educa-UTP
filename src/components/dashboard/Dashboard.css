@@ -25,7 +25,7 @@
 }
 
 /* Para móviles: mostrar como overlay */
-@media (max-width: 768px) {
+@media (max-width: 1136px) {
   .sidebar {
     position: fixed;
     top: 56px; /* Altura del navbar */
@@ -57,12 +57,34 @@
   transition: margin-left 0.3s;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1137px) {
   .main-content {
     margin-left: 220px;
   }
 
   .sidebar.collapsed + .main-content {
     margin-left: 70px;
+  }
+}
+
+/* Añade estos estilos */
+.main-content {
+  transition: margin-left 0.3s ease;
+  width: 100%;
+}
+
+.sidebar:not(.collapsed) + .main-content {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+.table-responsive {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .sidebar:not(.collapsed) + .main-content {
+    margin-left: 0;
+    width: 100%;
   }
 }
