@@ -17,19 +17,40 @@ const SharedResources = ({ userId }) => {
   useEffect(() => {
     const fetchSharedResources = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/docente/recursos-compartidos', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setResources(response.data);
+        setLoading(true);
+        setError(null);
+        
+        // Obtener recursos compartidos
+        const resResponse = await axios.get(
+          'http://localhost:3000/api/docente/recursos-compartidos',
+          {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
+
+        if (!resResponse.data || !Array.isArray(resResponse.data)) {
+          throw new Error('Formato de respuesta inválido para recursos compartidos');
+        }
+
+        setResources(resResponse.data);
+        
       } catch (err) {
-        console.error('Error al obtener recursos compartidos:', err);
-        setError('Error al cargar los recursos compartidos');
+        console.error('Error al cargar recursos compartidos:', {
+          error: err,
+          response: err.response
+        });
+        
+        setError(err.response?.data?.message || 
+                'Error al cargar recursos compartidos. Intente recargar la página.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSharedResources();
+    fetchData();
   }, [token, userId]);
 
   const handleFilterChange = (e) => {

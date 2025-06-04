@@ -10,9 +10,9 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
-    id_categoria: '',
+    archivo: null,
     id_curso: '',
-    tipo_archivo: 'PDF'
+    id_categoria: ''
   });
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,172 +26,182 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      // Validar tipo de archivo
-      const fileType = selectedFile.name.split('.').pop().toUpperCase();
-      if (!['PDF', 'DOCX', 'PPTX'].includes(fileType)) {
-        setError('Solo se permiten archivos PDF, DOCX o PPTX');
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Validación de tamaño (25MB)
+      if (file.size > 25 * 1024 * 1024) {
+        toast.error('El archivo no debe exceder los 25MB');
+        e.target.value = ''; // Limpiar el input
         return;
       }
-      setError('');
-      setFile(selectedFile);
-      setFormData(prev => ({ ...prev, tipo_archivo: fileType }));
+      
+      setFormData({ ...formData, archivo: file });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     
-    if (!file) {
-      setError('Debes seleccionar un archivo');
+    // Validación mejorada
+    if (!formData.titulo.trim() || !formData.id_curso || !formData.id_categoria || !formData.archivo) {
+      toast.error('Complete todos los campos obligatorios');
       return;
     }
 
-    if (!formData.id_categoria || !formData.id_curso) {
-      setError('Debes seleccionar categoría y curso');
-      return;
-    }
-
-    setIsLoading(true);
+    setIsUploading(true);
 
     try {
       const data = new FormData();
-      data.append('archivo', file);
       data.append('titulo', formData.titulo);
-      data.append('descripcion', formData.descripcion);
-      data.append('id_categoria', formData.id_categoria);
+      data.append('descripcion', formData.descripcion || ''); // Asegurar campo
+      data.append('archivo', formData.archivo);
       data.append('id_curso', formData.id_curso);
-      data.append('tipo_archivo', formData.tipo_archivo);
+      data.append('id_categoria', formData.id_categoria);
+
+      // Añadir logs para depuración
+      console.log('Enviando FormData con:', {
+        titulo: formData.titulo,
+        curso: formData.id_curso,
+        categoria: formData.id_categoria,
+        archivo: formData.archivo.name
+      });
 
       const response = await axios.post(
+        'http://localhost:3000/api/docente/subir-recurso',
+        data,
         'http://localhost:3000/api/docente/subir-recurso',
         data,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 30000 // 30 segundos timeout
         }
       );
 
-      if (response.status === 201) {
+      toast.success('Recurso subido exitosamente');
+      if (onUploadSuccess) {
         onUploadSuccess(response.data);
-        // Reset form
-        setFormData({
-          titulo: '',
-          descripcion: '',
-          id_categoria: '',
-          id_curso: '',
-          tipo_archivo: 'PDF'
-        });
-        setFile(null);
-        document.getElementById('fileInput').value = '';
       }
-    } catch (err) {
-      console.error('Error al subir recurso:', err);
-      setError(err.response?.data?.error || 'Error al subir el recurso');
+      
+      // Reset mejorado
+      setFormData({
+        titulo: '',
+        descripcion: '',
+        archivo: null,
+        id_curso: '',
+        id_categoria: ''
+      });
+      document.getElementById('fileInput').value = '';
+      
+    } catch (error) {
+      console.error('Error completo:', {
+        message: error.message,
+        response: error.response?.data,
+        config: error.config,
+        stack: error.stack
+      });
+      
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      'Error al subir el recurso';
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Subir Recurso Educativo</h2>
-      <div className="card">
-        <div className="card-body">
-          {error && <div className="alert alert-danger">{error}</div>}
-          
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Título del Recurso</label>
-              <input
-                type="text"
-                className="form-control"
-                name="titulo"
-                value={formData.titulo}
+    <div className="card mb-4">
+      <div className="card-header bg-primary text-white">
+        <h5>Subir Nuevo Recurso</h5>
+      </div>
+      <div className="card-body">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Título *</label>
+            <input
+              type="text"
+              className="form-control"
+              name="titulo"
+              value={formData.titulo}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Descripción</label>
+            <textarea
+              className="form-control"
+              name="descripcion"
+              value={formData.descripcion}
+              onChange={handleChange}
+              rows="3"
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Archivo *</label>
+            <input
+              id="fileInput"
+              type="file"
+              className="form-control"
+              onChange={handleFileChange}
+              accept=".pdf,.docx"
+              required
+            />
+            <small className="text-muted">Formatos aceptados: PDF, DOCX (Máx. 25MB)</small>
+          </div>
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Curso *</label>
+              <select
+                className="form-select"
+                name="id_curso"
+                value={formData.id_curso}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Seleccionar curso</option>
+                {courses.map(course => (
+                  <option key={course.id_curso} value={course.id_curso}>
+                    {course.nombre_curso}
+                  </option>
+                ))}
+              </select>
             </div>
-
-            <div className="mb-3">
-              <label className="form-label">Descripción</label>
-              <textarea
-                className="form-control"
-                name="descripcion"
-                value={formData.descripcion}
+            <div className="col-md-6">
+              <label className="form-label">Categoría *</label>
+              <select
+                className="form-select"
+                name="id_categoria"
+                value={formData.id_categoria}
                 onChange={handleChange}
-                rows="3"
-              />
-            </div>
-
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label className="form-label">Curso</label>
-                <select
-                  className="form-select"
-                  name="id_curso"
-                  value={formData.id_curso}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Seleccionar curso</option>
-                  {courses.map(curso => (
-                    <option key={curso.id_curso} value={curso.id_curso}>
-                      {curso.nombre_curso}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Categoría</label>
-                <select
-                  className="form-select"
-                  name="id_categoria"
-                  value={formData.id_categoria}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Seleccionar categoría</option>
-                  {categories.map(categoria => (
-                    <option key={categoria.id_categoria} value={categoria.id_categoria}>
-                      {categoria.nombre_categoria}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Archivo (PDF, DOCX, PPTX)</label>
-              <input
-                id="fileInput"
-                type="file"
-                className="form-control"
-                onChange={handleFileChange}
-                accept=".pdf,.docx,.pptx"
                 required
-              />
-              {file && (
-                <small className="text-muted">
-                  Archivo seleccionado: {file.name} ({formData.tipo_archivo})
-                </small>
-              )}
+              >
+                <option value="">Seleccionar categoría</option>
+                {categories.map(category => (
+                  <option key={category.id_categoria} value={category.id_categoria}>
+                    {category.nombre_categoria}
+                  </option>
+                ))}
+              </select>
             </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Subiendo...' : 'Subir Recurso'}
-            </button>
-          </form>
-        </div>
+          </div>
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Subiendo...
+              </>
+            ) : 'Subir Recurso'}
+          </button>
+        </form>
       </div>
     </div>
   );

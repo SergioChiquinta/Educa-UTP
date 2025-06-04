@@ -34,10 +34,10 @@ router.delete('/recurso/:id', verifyToken, recursoController.eliminarRecurso);
 // Ver recursos compartidos por otros docentes
 router.get('/recursos-compartidos', verifyToken, recursoController.obtenerRecursosPublicos);
 
-// Rutas para descargar (opcional)
-router.get('/descargar/:filename', (req, res) => {
-  const file = path.join(__dirname, '..', 'uploads/recursos', req.params.filename);
-  res.download(file);
-});
+// Ruta para eliminar recurso
+router.delete('/eliminar-recurso/:id_recurso', docenteController.eliminarRecurso);
+
+// Ruta para actualizar recursos
+router.put('/recurso/:id_recurso', docenteController.actualizarRecurso);
 
 module.exports = router;

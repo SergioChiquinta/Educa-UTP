@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import ResourceList from '../docente/ResourceList';
 import SharedResouces from '../docente/SharedResources';
@@ -9,7 +10,12 @@ import ResourceUpload from '../docente/ResourceUpload';
 
 function Dashboard() {
   
-  const [resources, setResources] = useState([]);
+  const handleUploadSuccess = (uploadedResource) => {
+    toast.success('Recurso subido correctamente');
+    setActiveSection('resources'); // Redirige a la lista de recursos
+    // Si necesitas actualizar la lista de recursos, puedes hacerlo aquí
+  };
+
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const userId = localStorage.getItem('userId');

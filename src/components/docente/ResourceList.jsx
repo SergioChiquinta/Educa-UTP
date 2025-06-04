@@ -21,13 +21,33 @@ const ResourceList = ({ userId }) => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/docente/mis-recursos', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        setLoading(true);
+        setError(null);
+        
+        const response = await axios.get(
+          'http://localhost:3000/api/docente/recursos',
+          {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
+
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error('Formato de respuesta inválido');
+        }
+
         setResources(response.data);
+        
       } catch (err) {
-        console.error('Error al obtener recursos:', err);
-        setError('Error al cargar los recursos');
+        console.error('Error al cargar recursos:', {
+          error: err,
+          response: err.response
+        });
+        
+        setError(err.response?.data?.message || 
+                'Error al cargar los recursos. Intente recargar la página.');
       } finally {
         setLoading(false);
       }
@@ -36,55 +56,9 @@ const ResourceList = ({ userId }) => {
     fetchResources();
   }, [token, userId]);
 
-  const handleDelete = (id) => {
-    confirmAlert({
-      title: 'Confirmar eliminación',
-      message: '¿Estás seguro de que quieres eliminar este recurso?',
-      buttons: [
-        {
-          label: 'Sí',
-          onClick: async () => {
-            try {
-              await axios.delete(`http://localhost:3000/api/docente/recurso/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              setResources(resources.filter(resource => resource.id_recurso !== id));
-            } catch (err) {
-              console.error('Error al eliminar recurso:', err);
-              setError('No se pudo eliminar el recurso');
-            }
-          }
-        },
-        {
-          label: 'No',
-          onClick: () => {}
-        }
-      ]
-    });
-  };
-
-  const startEditing = (resource) => {
-    setEditingId(resource.id_recurso);
-    setEditForm({
-      titulo: resource.titulo,
-      descripcion: resource.descripcion,
-      id_categoria: resource.id_categoria,
-      id_curso: resource.id_curso
-    });
-  };
-
-  const cancelEditing = () => {
-    setEditingId(null);
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const saveEdit = async (id) => {
+  const handleDelete = async (resourceId) => {
     try {
-      await axios.put(`http://localhost:3000/api/docente/recurso/${id}`, editForm, {
+      await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
