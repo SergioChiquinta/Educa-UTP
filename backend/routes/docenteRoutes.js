@@ -28,4 +28,7 @@ router.put('/recurso/:id_recurso', docenteController.actualizarRecurso);
 // Ruta para registrar descargas
 router.post('/registrar-descarga', docenteController.registrarDescarga);
 
+// Ruta para obtener estadísticas del docente
+router.get('/estadisticas', docenteController.getEstadisticasDocente);
+
 module.exports = router;

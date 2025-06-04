@@ -1,14 +1,20 @@
 
 // src/components/docente/SharedResources.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import "./ResourceList.css";
+import { Modal, Button } from 'react-bootstrap';
+import { renderAsync } from 'docx-preview';
+import "./ResourceTables.css";
+import "./ResourceModalPreview.css";
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showWordModal, setShowWordModal] = useState(false);
+  const [currentWordResource, setCurrentWordResource] = useState(null);
+  const previewContainerRef = useRef(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -42,26 +48,54 @@ const SharedResources = () => {
     });
   };
 
-  const handlePreview = (resource) => {
-    const fileUrl = `http://localhost:3000/uploads/${resource.archivo_url}`;
+  const handlePreview = async (resource) => {
     if (resource.tipo_archivo === 'PDF') {
-      window.open(fileUrl, '_blank');
-    } else {
-      toast.info('Solo se pueden previsualizar archivos PDF');
+      window.open(`http://localhost:3000/uploads/${resource.archivo_url}`, '_blank');
+    } else if (resource.tipo_archivo === 'DOCX') {
+      try {
+        setCurrentWordResource(resource);
+        setShowWordModal(true);
+        
+        // Esperar a que el modal esté montado en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const response = await fetch(`http://localhost:3000/uploads/${resource.archivo_url}`);
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // Limpiar el contenedor antes de renderizar
+        previewContainerRef.current.innerHTML = '';
+        
+        await renderAsync(
+          arrayBuffer,
+          previewContainerRef.current,
+          null,
+          {
+            className: 'docx-preview', // Clase CSS para el contenedor
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            ignoreFonts: false,
+            breakPages: true,
+            debug: false
+          }
+        );
+      } catch (error) {
+        console.error('Error al previsualizar DOCX:', error);
+        toast.error('Error al cargar la previsualización');
+        setShowWordModal(false);
+      }
     }
   };
 
   const handleDownload = async (resource) => {
     try {
-      // 1. Registrar la descarga primero
       await axios.post(
         'http://localhost:3000/api/docente/registrar-descarga',
         { id_recurso: resource.id_recurso },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 2. Iniciar la descarga
-      const fileUrl = `http://localhost:3000/uploads/${resource.archivo_url}`;
+      const fileUrl = `http://localhost:3000/uploads/${resource.archivo_url}?download=true`;
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;
@@ -137,7 +171,7 @@ const SharedResources = () => {
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handlePreview(resource)}
-                        disabled={resource.tipo_archivo !== 'PDF'}
+                        disabled={!['PDF', 'DOCX'].includes(resource.tipo_archivo)}
                         title="Previsualizar"
                       >
                         <i className="bi bi-eye"></i>
@@ -157,6 +191,35 @@ const SharedResources = () => {
           </table>
         </div>
       )}
+
+      {/* Modal para previsualización de Word */}
+      <Modal show={showWordModal} onHide={() => setShowWordModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-file-earmark-word me-2"></i>
+            {currentWordResource?.titulo}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ height: '70vh', overflow: 'auto' }}>
+          <div ref={previewContainerRef} className="docx-container" />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="primary" 
+            onClick={() => {
+              if (currentWordResource) {
+                handleDownload(currentWordResource);
+              }
+            }}
+          >
+            <i className="bi bi-download me-2"></i>
+            Descargar
+          </Button>
+          <Button variant="secondary" onClick={() => setShowWordModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

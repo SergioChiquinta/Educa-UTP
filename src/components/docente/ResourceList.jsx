@@ -6,7 +6,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import "./ResourceList.css";
+import "./ResourceTables.css";
 
 const ResourceList = () => {
   const [courses, setCourses] = useState([]);

@@ -280,3 +280,30 @@ exports.actualizarRecurso = async (req, res) => {
     });
   }
 };
+
+// Obtener estadísticas del docente
+exports.getEstadisticasDocente = async (req, res) => {
+  try {
+    const docenteId = req.user.id;
+    
+    // Recursos subidos por el docente
+    const [recursosSubidos] = await db.promise().query(
+      'SELECT COUNT(*) as total FROM recursos WHERE id_docente = ?',
+      [docenteId]
+    );
+    
+    // Descargas hechas por el docente
+    const [descargasHechas] = await db.promise().query(
+      'SELECT COUNT(*) as total FROM estadisticas_descarga WHERE id_usuario = ?',
+      [docenteId]
+    );
+    
+    res.json({
+      recursosSubidos: recursosSubidos[0].total,
+      descargasHechas: descargasHechas[0].total
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas' });
+  }
+};
