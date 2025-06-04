@@ -8,21 +8,10 @@ import ResourceUpload from '../docente/ResourceUpload';
 
 function Dashboard() {
   
-  const handleUploadSuccess = (uploadedResource) => {
-    // Puedes hacer varias cosas aquí:
-    // 1. Mostrar un mensaje de éxito
-    alert('Recurso subido correctamente');
-    
-    // 2. Actualizar la lista de recursos (si usas estado)
-    // setResources(prev => [...prev, uploadedResource]);
-    
-    // 3. Redirigir a otra sección
-    // setActiveSection('resources');
-  };
-
+  const [resources, setResources] = useState([]);
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const userId = localStorage.getItem('userId'); // Asegúrate de guardar esto en el login
+  const userId = localStorage.getItem('userId');
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('welcome');
@@ -35,6 +24,28 @@ function Dashboard() {
     foto_perfil: '',
     password: ''
   });
+
+  // Función para manejar el éxito en la subida de recursos
+  const handleUploadSuccess = (uploadedResource) => {
+    // Actualizar la lista de recursos
+    setResources(prev => [...prev, uploadedResource]);
+    // Mostrar mensaje de éxito
+    alert('Recurso subido correctamente');
+    // Cambiar a la vista de recursos
+    setActiveSection('resources');
+  };
+
+  // Función para manejar la eliminación de recursos
+  const handleDeleteResource = (id) => {
+    setResources(prev => prev.filter(resource => resource.id_recurso !== id));
+  };
+
+  // Función para manejar la actualización de recursos
+  const handleUpdateResource = (updatedResource) => {
+    setResources(prev => prev.map(resource => 
+      resource.id_recurso === updatedResource.id_recurso ? updatedResource : resource
+    ));
+  };
 
   const token = localStorage.getItem('token');
 
@@ -256,58 +267,73 @@ function Dashboard() {
         </div>
       )}
 
-      {activeSection === 'profile' && (
-        <div className="container mt-4">
-          <h3 className="text-center mb-4">Perfil de Usuario</h3>
-          <div className="card shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
-            <div className="card-body">
-              <form>
-                <div className="mb-3">
-                  <label className="form-label">Foto de perfil</label>
-                  <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
+          {activeSection === 'profile' && (
+            <div className="container mt-5">
+              <h2 className="mb-4 text-center">Perfil de Usuario</h2>
+              <div className="card mx-auto" style={{ maxWidth: '600px' }}>
+                <div className="card-body">
+                  <form>
+                    <div className="mb-3">
+                      <label className="form-label">Foto de perfil</label>
+                      <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Nombre</label>
+                      <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Correo</label>
+                      <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Nueva contraseña</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="password"
+                        value={user.password}
+                        onChange={handleChange}
+                        placeholder="Escribe una nueva contraseña si deseas cambiarla"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Rol (no editable)</label>
+                      <input type="text" className="form-control" value={user.nombre_rol} readOnly />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Área de interés</label>
+                      <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
+                    </div>
+                    <div className="text-center">
+                      <button type="button" className="btn btn-primary" onClick={handleEdit}>
+                        {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Nombre</label>
-                  <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Correo</label>
-                  <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Nueva contraseña</label>
-                  <input type="password" className="form-control" name="password" value={user.password} onChange={handleChange} disabled={!isEditing} placeholder="Escribe una nueva contraseña si deseas cambiarla" />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Rol</label>
-                  <input type="text" className="form-control" value={user.nombre_rol} readOnly />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Área de interés</label>
-                  <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
-                </div>
-                <div className="text-center mt-4">
-                  <button type="button" className="btn btn-primary" onClick={handleEdit}>
-                    {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
-                  </button>
-                </div>
-              </form>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+          
+          <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            {activeSection === 'upload' && (
+              <ResourceUpload
+                courses={courses} 
+                categories={categories} 
+                onUploadSuccess={handleUploadSuccess}
+              />
+            )}
 
-      {activeSection === 'upload' && (
-        <ResourceUpload 
-          courses={courses} 
-          categories={categories} 
-          onUploadSuccess={handleUploadSuccess} 
-        />
-      )}
-
-      {activeSection === 'resources' && userId && (
-        <ResourceList userId={userId} courses={courses} categories={categories} />
-      )}
+            {activeSection === 'resources' && userId && (
+              <ResourceList 
+                userId={userId} 
+                courses={courses} 
+                categories={categories}
+                onDelete={handleDeleteResource}
+                onUpdate={handleUpdateResource}
+              />
+            )}
 
       {activeSection === 'shared' && userId && (
         <SharedResources userId={userId} />
