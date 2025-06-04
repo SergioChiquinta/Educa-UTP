@@ -5,7 +5,7 @@ import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
-const ResourceList = ({ userId }) => {
+const ResourceList = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +28,7 @@ const ResourceList = ({ userId }) => {
           'http://localhost:3000/api/docente/recursos',
           {
             headers: { 
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               'Cache-Control': 'no-cache'
             }
           }
@@ -54,7 +54,7 @@ const ResourceList = ({ userId }) => {
     };
 
     fetchResources();
-  }, [token, userId]);
+  }, [token]);
 
   const handleDelete = async (resourceId) => {
     try {

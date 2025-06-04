@@ -1,55 +1,59 @@
 
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+import "./Dashboard.css";
 
 function Dashboard() {
-  const navigate = useNavigate();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeSection, setActiveSection] = useState('welcome');
-  const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState({
-    nombre_completo: '',
-    correo: '',
-    nombre_rol: '',
-    area_interes: '',
-    foto_perfil: '',
-    password: ''
-  });
-
-  const token = localStorage.getItem('token');
+    const [courses, setCourses] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const userId = localStorage.getItem("userId"); // Asegúrate de guardar esto en el login
+    const navigate = useNavigate();
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [activeSection, setActiveSection] = useState("welcome");
+    const [isEditing, setIsEditing] = useState(false);
+    const [user, setUser] = useState({
+      nombre_completo: "",
+      correo: "",
+      nombre_rol: "",
+      area_interes: "",
+      foto_perfil: "",
+      password: "",
+    });
+  
+    const token = localStorage.getItem("token");
 
   useEffect(() => {
     if (!token) {
-      navigate('/');
+      navigate("/");
       return;
     }
-    
+
     const loadProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
+        const response = await axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         // Extrae solo el nombre del archivo si hay una URL completa
         let foto_perfil = response.data.foto_perfil;
-        if (foto_perfil && foto_perfil.includes('/')) {
-          foto_perfil = foto_perfil.split('/').pop();
+        if (foto_perfil && foto_perfil.includes("/")) {
+          foto_perfil = foto_perfil.split("/").pop();
         }
 
         setUser({
           nombre_completo: response.data.nombre_completo,
           correo: response.data.correo,
           nombre_rol: response.data.nombre_rol,
-          area_interes: response.data.area_interes || '',
-          foto_perfil: foto_perfil || '',
-          password: ''
+          area_interes: response.data.area_interes || "",
+          foto_perfil: foto_perfil || "",
+          password: "",
         });
-
       } catch (error) {
-        console.error('Error al cargar perfil:', error);
-        navigate('/');
+        console.error("Error al cargar perfil:", error);
+        navigate("/");
       }
     };
 
@@ -66,74 +70,80 @@ function Dashboard() {
   };
 
   const handleEdit = async () => {
-  if (isEditing) {
-    try {
-      // Primero actualizamos los datos del perfil
-      await axios.put('http://localhost:3000/api/profile', {
-        nombre_completo: user.nombre_completo,
-        correo: user.correo,
-        password: user.password,
-        area_interes: user.area_interes
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Luego actualizamos la foto si hay una seleccionada
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append('profile_image', selectedFile);
-
-        const pictureResponse = await axios.put(
-          'http://localhost:3000/api/profile/picture', 
-          formData, 
+    if (isEditing) {
+      try {
+        // Primero actualizamos los datos del perfil
+        await axios.put(
+          "http://localhost:3000/api/profile",
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data'
-            }
+            nombre_completo: user.nombre_completo,
+            correo: user.correo,
+            password: user.password,
+            area_interes: user.area_interes,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        // Forzar una actualización completa del estado
-        setUser(prev => ({
-          ...prev,
-          foto_perfil: pictureResponse.data.filename,
-          password: '' // Limpiar contraseña
-        }));
+        // Luego actualizamos la foto si hay una seleccionada
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append("profile_image", selectedFile);
+
+          const pictureResponse = await axios.put(
+            "http://localhost:3000/api/profile/picture",
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+
+          // Forzar una actualización completa del estado
+          setUser((prev) => ({
+            ...prev,
+            foto_perfil: pictureResponse.data.filename,
+            password: "", // Limpiar contraseña
+          }));
+        }
+
+        // Recargar los datos del servidor para asegurar consistencia
+        const refreshed = await axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser({
+          nombre_completo: refreshed.data.nombre_completo,
+          correo: refreshed.data.correo,
+          nombre_rol: refreshed.data.nombre_rol,
+          area_interes: refreshed.data.area_interes || "",
+          foto_perfil: refreshed.data.foto_perfil?.split("/").pop() || "",
+          password: "",
+        });
+
+        alert(
+          selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado"
+        );
+        setSelectedFile(null);
+      } catch (error) {
+        console.error("Error:", error);
+        alert(error.response?.data?.message || "Error al actualizar");
       }
-
-      // Recargar los datos del servidor para asegurar consistencia
-      const refreshed = await axios.get('http://localhost:3000/api/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setUser({
-        nombre_completo: refreshed.data.nombre_completo,
-        correo: refreshed.data.correo,
-        nombre_rol: refreshed.data.nombre_rol,
-        area_interes: refreshed.data.area_interes || '',
-        foto_perfil: refreshed.data.foto_perfil?.split('/').pop() || '',
-        password: ''
-      });
-
-      alert(selectedFile ? 'Perfil y foto actualizados' : 'Perfil actualizado');
-      setSelectedFile(null);
-    } catch (error) {
-      console.error('Error:', error);
-      alert(error.response?.data?.message || 'Error al actualizar');
     }
-  }
-  setIsEditing(!isEditing);
-};
+    setIsEditing(!isEditing);
+  };
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
   };
 
   // Foto de perfil
@@ -143,57 +153,85 @@ function Dashboard() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       // Validación básica del tipo de archivo
-      if (!file.type.match('image.*')) {
-        alert('Por favor selecciona un archivo de imagen válido');
+      if (!file.type.match("image.*")) {
+        alert("Por favor selecciona un archivo de imagen válido");
         return;
       }
       // Validación de tamaño (ejemplo: máximo 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        alert('La imagen no debe exceder los 2MB');
+        alert("La imagen no debe exceder los 2MB");
         return;
       }
       setSelectedFile(file);
-      
+
       // Vista previa inmediata (opcional)
       const reader = new FileReader();
       reader.onload = (event) => {
-        setUser(prev => ({...prev, foto_perfil: event.target.result}));
+        setUser((prev) => ({ ...prev, foto_perfil: event.target.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
+  // Sidebar Diseño
+    useEffect(() => {
+      const isMobile = window.innerWidth <= 768;
+      if (sidebarCollapsed && isMobile) {
+        document.body.classList.remove("sidebar-open");
+      } else if (!sidebarCollapsed && isMobile) {
+        document.body.classList.add("sidebar-open");
+      }
+    }, [sidebarCollapsed]);
+
   return (
-    <div className="d-flex flex-column vh-100">
+    <div className="container-fluid p-0 d-flex flex-column vh-100">
       {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <button className="btn btn-outline-primary me-3" onClick={toggleSidebar}>
+      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
+        <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
           ☰
         </button>
-        <div className="ms-auto d-flex align-items-center position-relative">
-          <div className="profile d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style={{ cursor: 'pointer' }}>
-          <img
-            src={
-              user.foto_perfil
-                ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
-                : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || 'U')}&background=random&rounded=true&size=40`
-            }
-            alt="avatar"
-            className="rounded-circle"
-            width="40"
-            height="40"
-          />
-            <span className="ms-2 fw-semibold">{user.nombre_completo}</span>
+        <div className="ms-auto d-flex align-items-center dropdown">
+          <div
+            className="d-flex align-items-center"
+            data-bs-toggle="dropdown"
+            style={{ cursor: "pointer" }}
+          >
+            <img
+              src={
+                user.foto_perfil
+                  ? `http://localhost:3000/uploads/${
+                      user.foto_perfil
+                    }?t=${Date.now()}`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user.nombre_completo || "U"
+                    )}&background=random&rounded=true&size=40`
+              }
+              alt="avatar"
+              className="rounded-circle border"
+              width="40"
+              height="40"
+            />
+            <span className="ms-2 fw-semibold text-dark">
+              {user.nombre_completo}
+            </span>
           </div>
-          <ul className="dropdown-menu dropdown-menu-end">
-            <li><button className="dropdown-item" onClick={handleLogout}>Cerrar sesión</button></li>
+          <ul className="dropdown-menu dropdown-menu-end mt-2">
+            <li>
+              <button className="dropdown-item" onClick={handleLogout}>
+                Cerrar sesión
+              </button>
+            </li>
           </ul>
         </div>
       </nav>
-
       <div className="d-flex flex-grow-1">
         {/* Sidebar */}
-        <div className={`sidebar bg-dark ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', maxWidth: '220px', transition: 'all 0.3s' }}>
+        <div
+          className={`bg-dark text-white sidebar shadow-sm ${
+            sidebarCollapsed ? "collapsed" : ""
+          }`}
+          style={{ minWidth: "220px", transition: "all 0.3s" }}
+        >
           <h5 className="text-center py-3 border-bottom border-secondary text-white">
             <i
               className="bi bi-folder2-open me-2"
@@ -209,6 +247,12 @@ function Dashboard() {
                 section: "welcome",
                 color: "#FFC107",
               }, // amarillo
+              {
+                icon: "bi-share-fill",
+                label: "Recursos Compartidos",
+                section: "shared",
+                color: "#6F42C1",
+              }, // morado
               {
                 icon: "bi-person",
                 label: "Perfil",
@@ -255,10 +299,9 @@ function Dashboard() {
             </li>
           </ul>
         </div>
-
         {/* Main Content */}
-        <div className={`content flex-grow-1 p-4 ${sidebarCollapsed ? 'full' : ''}`} style={{ transition: 'margin-left 0.3s' }}>
-          {activeSection === 'welcome' && (
+        <div className="flex-grow-1 p-4 bg-light">
+          {activeSection === "welcome" && (
             <div className="text-center mt-5">
               <h2
                 className="fw-bold text-center"
@@ -272,11 +315,10 @@ function Dashboard() {
               >
                 ¡Bienvenido, {user.nombre_rol}!
               </h2>
-              <p className="text-muted">Nos alegra tenerte de vuelta.</p>
+              <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
             </div>
           )}
-
-          {activeSection === 'profile' && (
+          {activeSection === "profile" && (
             <div className="container mt-5">
               <h2 className="mb-4 text-center fw-bold text-dark">
                 <i
@@ -369,12 +411,21 @@ function Dashboard() {
               </div>
             </div>
           )}
+          {activeSection === "shared" && userId && (
+            <SharedResouces userId={userId} />
+          )}
         </div>
       </div>
-
+      {/* Estilo sidebar colapsado */}
       <style>{`
         .sidebar.collapsed {
           margin-left: -220px;
+        }
+        .sidebar {
+          transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+          background-color: rgba(255, 255, 255, 0.1);
         }
       `}</style>
     </div>
