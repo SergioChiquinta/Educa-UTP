@@ -30,7 +30,7 @@ const ResourceList = () => {
           {
             headers: { 
               Authorization: `Bearer ${token}`,
-              
+              'Cache-Control': 'no-cache',
             }
           }
         );
