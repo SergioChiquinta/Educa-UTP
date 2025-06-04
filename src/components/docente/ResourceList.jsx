@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 import "./ResourceList.css";
 
@@ -150,7 +151,10 @@ const ResourceList = () => {
 
   return (
     <div className="container mt-4 mt-4">
-      <h2 className="mb-4">Mis Recursos</h2>
+      <h2 className="mb-4">
+        <i className="bi bi-archive me-2"></i> 
+        Mis Recursos
+      </h2>
       
       {resources.length === 0 ? (
         <div className="alert alert-info">No has subido ningún recurso aún.</div>
@@ -234,9 +238,11 @@ const ResourceList = () => {
                     )}
                   </td>
                   <td data-label="Tipo">
-                    <span className="badge bg-secondary">{resource.tipo_archivo}</span>
+                    <span className={`badge ${resource.tipo_archivo === 'PDF' ? 'bg-danger' : 'bg-primary'}`}>
+                      {resource.tipo_archivo}
+                    </span>
                   </td>
-                  <td className="d-sm-table-cell" data-label="Fecha">
+                  <td data-label="Fecha">
                     <span className="text-nowrap">{formatDate(resource.fecha_subida)}</span>
                   </td>
                   <td data-label="Acciones">

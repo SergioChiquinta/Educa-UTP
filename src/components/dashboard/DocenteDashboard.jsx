@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
 import ResourceUpload from "../docente/ResourceUpload";
+import SharedResources from "../docente/SharedResources";
 
 import "./Dashboard.css";
 
@@ -477,7 +478,7 @@ function Dashboard() {
             />
           )}
           {activeSection === "shared" && (
-            <SharedResouces/>
+            <SharedResources/>
           )}
         </div>
       </div>
