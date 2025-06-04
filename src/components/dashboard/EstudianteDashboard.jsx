@@ -194,39 +194,134 @@ function Dashboard() {
       <div className="d-flex flex-grow-1">
         {/* Sidebar */}
         <div className={`sidebar bg-dark ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ minWidth: '220px', maxWidth: '220px', transition: 'all 0.3s' }}>
-          <h4 className="text-white text-center py-3">Menú</h4>
-          <a href="#" onClick={() => showSection('welcome')} className="text-decoration-none d-block px-4 py-2 text-light">Inicio</a>
-          <a href="#" onClick={() => showSection('profile')} className="text-decoration-none d-block px-4 py-2 text-light">Perfil</a>
-          <a href="https://tubiblioteca.utp.edu.pe" className="text-decoration-none d-block px-4 py-2 text-light">UTP+biblio</a>
-          <a href="#" className="text-decoration-none d-block px-4 py-2 text-light">Ayuda</a>
+          <h5 className="text-center py-3 border-bottom border-secondary text-white">
+            <i
+              className="bi bi-folder2-open me-2"
+              style={{ fontSize: "1.2rem" }}
+            ></i>
+            Menú
+          </h5>
+          <ul className="nav flex-column px-3">
+            {[
+              {
+                icon: "bi-house-door",
+                label: "Inicio",
+                section: "welcome",
+                color: "#FFC107",
+              }, // amarillo
+              {
+                icon: "bi-person",
+                label: "Perfil",
+                section: "profile",
+                color: "#FD7E14",
+              }, // naranja
+            ].map((item) => (
+              <li key={item.section} className="nav-item my-1">
+                <a
+                  href="#"
+                  onClick={() => showSection(item.section)}
+                  className="nav-link text-white px-2 d-flex align-items-center gap-2"
+                  style={{ transition: "0.2s", borderRadius: "5px" }}
+                >
+                  <i
+                    className={`bi ${item.icon}`}
+                    style={{ color: item.color }}
+                  ></i>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+            <hr className="border-secondary my-2" />
+            <li className="nav-item px-0">
+              <a
+                href="https://tubiblioteca.utp.edu.pe"
+                className="nav-link text-white d-flex align-items-center gap-2"
+              >
+                <i className="bi bi-book" style={{ color: "#0DCAF0" }}></i>
+                UTP+biblio
+              </a>
+            </li>
+            <li className="nav-item px-0">
+              <a
+                href="#"
+                className="nav-link text-white d-flex align-items-center gap-2"
+              >
+                <i
+                  className="bi bi-question-circle"
+                  style={{ color: "#DC3545" }}
+                ></i>
+                Ayuda
+              </a>
+            </li>
+          </ul>
         </div>
 
         {/* Main Content */}
         <div className={`content flex-grow-1 p-4 ${sidebarCollapsed ? 'full' : ''}`} style={{ transition: 'margin-left 0.3s' }}>
           {activeSection === 'welcome' && (
             <div className="text-center mt-5">
-              <h1 className="mb-3">¡Bienvenido {user.nombre_rol}!</h1>
+              <h2
+                className="fw-bold text-center"
+                style={{
+                  color: "#1B1F3B",
+                  fontSize: "2rem",
+                  borderBottom: "3px solid #1B1F3B",
+                  display: "inline-block",
+                  paddingBottom: "8px",
+                }}
+              >
+                ¡Bienvenido, {user.nombre_rol}!
+              </h2>
               <p className="text-muted">Nos alegra tenerte de vuelta.</p>
             </div>
           )}
 
           {activeSection === 'profile' && (
             <div className="container mt-5">
-              <h2 className="mb-4 text-center">Perfil de Usuario</h2>
-              <div className="card mx-auto" style={{ maxWidth: '600px' }}>
+              <h2 className="mb-4 text-center fw-bold text-dark">
+                <i
+                  className="bi bi-person-circle me-2"
+                  style={{ fontSize: "2rem" }}
+                ></i>
+                Perfil de Usuario
+              </h2>
+              <div
+                className="card mx-auto shadow-sm rounded-4"
+                style={{ maxWidth: "600px" }}
+              >
                 <div className="card-body">
                   <form>
+                    {/* campos del perfil */}
                     <div className="mb-3">
                       <label className="form-label">Foto de perfil</label>
-                      <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
+                      <input
+                        type="file"
+                        className="form-control"
+                        onChange={handleFileChange}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nombre</label>
-                      <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing}/>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="nombre_completo"
+                        value={user.nombre_completo}
+                        onChange={handleChange}
+                        readOnly={!isEditing}
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Correo</label>
-                      <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="correo"
+                        value={user.correo}
+                        onChange={handleChange}
+                        readOnly={!isEditing}
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nueva contraseña</label>
@@ -242,15 +337,31 @@ function Dashboard() {
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Rol (no editable)</label>
-                      <input type="text" className="form-control" value={user.nombre_rol} readOnly />
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={user.nombre_rol}
+                        readOnly
+                      />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Área de interés</label>
-                      <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing}/>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="area_interes"
+                        value={user.area_interes}
+                        onChange={handleChange}
+                        readOnly={!isEditing}
+                      />
                     </div>
                     <div className="text-center">
-                      <button type="button" className="btn btn-primary" onClick={handleEdit}>
-                        {isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
+                      <button
+                        type="button"
+                        className="btn btn-dark px-4 py-2 rounded-3"
+                        onClick={handleEdit}
+                      >
+                        {isEditing ? "Guardar Cambios" : "Editar Perfil"}
                       </button>
                     </div>
                   </form>
