@@ -95,39 +95,54 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Subir Recurso Educativo</h2>
-      <div className="card">
-        <div className="card-body">
+    <div className="container mt-5">
+      <h2 
+  className="text-center fw-bold mb-4" 
+  style={{
+    color: '#1b1f3b',
+    fontSize: '2rem',
+    borderBottom: '3px solid #1b1f3b',
+    display: 'inline-block',
+    paddingBottom: '8px',
+    marginLeft: '430px',
+  }}>
+  📚 Subir Recurso Educativo
+</h2>
+
+  
+      <div className="card shadow rounded-4 border-0" style={{ backgroundColor: '#f9f9fc' }}>
+        <div className="card-body p-4">
           {error && <div className="alert alert-danger">{error}</div>}
-          
+  
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Título del Recurso</label>
+              <label className="form-label fw-semibold">Título del Recurso</label>
               <input
                 type="text"
                 className="form-control"
                 name="titulo"
                 value={formData.titulo}
                 onChange={handleChange}
+                placeholder="Ej. Introducción a la Física"
                 required
               />
             </div>
-
+  
             <div className="mb-3">
-              <label className="form-label">Descripción</label>
+              <label className="form-label fw-semibold">Descripción</label>
               <textarea
                 className="form-control"
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
                 rows="3"
+                placeholder="Agrega una descripción clara del recurso"
               />
             </div>
-
+  
             <div className="row mb-3">
               <div className="col-md-6">
-                <label className="form-label">Curso</label>
+                <label className="form-label fw-semibold">Curso</label>
                 <select
                   className="form-select"
                   name="id_curso"
@@ -143,9 +158,9 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                   ))}
                 </select>
               </div>
-
+  
               <div className="col-md-6">
-                <label className="form-label">Categoría</label>
+                <label className="form-label fw-semibold">Categoría</label>
                 <select
                   className="form-select"
                   name="id_categoria"
@@ -162,9 +177,9 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                 </select>
               </div>
             </div>
-
+  
             <div className="mb-3">
-              <label className="form-label">Archivo (PDF, DOCX, PPTX)</label>
+              <label className="form-label fw-semibold">Archivo (PDF, DOCX, PPTX)</label>
               <input
                 id="fileInput"
                 type="file"
@@ -174,24 +189,28 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                 required
               />
               {file && (
-                <small className="text-muted">
-                  Archivo seleccionado: {file.name} ({formData.tipo_archivo})
+                <small className="text-muted d-block mt-2">
+                  Archivo seleccionado: <strong>{file.name}</strong> ({formData.tipo_archivo})
                 </small>
               )}
             </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Subiendo...' : 'Subir Recurso'}
-            </button>
+  
+            <div className="text-end">
+              <button
+                type="submit"
+                className="btn text-white px-4 py-2 rounded-3"
+                style={{ backgroundColor: '#1b1f3b' }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Subiendo...' : 'Subir Recurso'}
+              </button>
+            </div>
           </form>
         </div>
       </div>
     </div>
   );
+  
   
 };
 
