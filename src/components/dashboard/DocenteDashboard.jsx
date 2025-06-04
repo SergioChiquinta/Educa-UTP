@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import ResourceList from '../docente/ResourceList';
 import SharedResouces from '../docente/SharedResources';
@@ -10,15 +11,9 @@ import ResourceUpload from '../docente/ResourceUpload';
 function Dashboard() {
   
   const handleUploadSuccess = (uploadedResource) => {
-    // Puedes hacer varias cosas aquí:
-    // 1. Mostrar un mensaje de éxito
-    alert('Recurso subido correctamente');
-    
-    // 2. Actualizar la lista de recursos (si usas estado)
-    // setResources(prev => [...prev, uploadedResource]);
-    
-    // 3. Redirigir a otra sección
-    // setActiveSection('resources');
+    toast.success('Recurso subido correctamente');
+    setActiveSection('resources'); // Redirige a la lista de recursos
+    // Si necesitas actualizar la lista de recursos, puedes hacerlo aquí
   };
 
   const [courses, setCourses] = useState([]);

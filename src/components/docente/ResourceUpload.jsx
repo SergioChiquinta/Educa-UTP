@@ -6,12 +6,11 @@ import { toast } from 'react-toastify';
 
 const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    file: null,
-    courseId: '',
-    categoryId: '',
-    fileType: 'PDF'
+    titulo: '',
+    descripcion: '',
+    archivo: null,
+    id_curso: '',
+    id_categoria: ''
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -22,45 +21,86 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, file: e.target.files[0] });
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Validación de tamaño (25MB)
+      if (file.size > 25 * 1024 * 1024) {
+        toast.error('El archivo no debe exceder los 25MB');
+        e.target.value = ''; // Limpiar el input
+        return;
+      }
+      
+      setFormData({ ...formData, archivo: file });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validación mejorada
+    if (!formData.titulo.trim() || !formData.id_curso || !formData.id_categoria || !formData.archivo) {
+      toast.error('Complete todos los campos obligatorios');
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       const data = new FormData();
-      data.append('title', formData.title);
-      data.append('description', formData.description);
-      data.append('archivo', formData.file);
-      data.append('courseId', formData.courseId);
-      data.append('categoryId', formData.categoryId);
-      data.append('fileType', formData.fileType);
+      data.append('titulo', formData.titulo);
+      data.append('descripcion', formData.descripcion || ''); // Asegurar campo
+      data.append('archivo', formData.archivo);
+      data.append('id_curso', formData.id_curso);
+      data.append('id_categoria', formData.id_categoria);
+
+      // Añadir logs para depuración
+      console.log('Enviando FormData con:', {
+        titulo: formData.titulo,
+        curso: formData.id_curso,
+        categoria: formData.id_categoria,
+        archivo: formData.archivo.name
+      });
 
       const response = await axios.post(
-        'http://localhost:3000/api/docente/subir-recurso',  // Ruta correcta
-        data, 
+        'http://localhost:3000/api/docente/subir-recurso',
+        data,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 30000 // 30 segundos timeout
         }
       );
 
       toast.success('Recurso subido exitosamente');
-      onUploadSuccess(response.data);
+      if (onUploadSuccess) {
+        onUploadSuccess(response.data);
+      }
+      
+      // Reset mejorado
       setFormData({
-        title: '',
-        description: '',
-        file: null,
-        courseId: '',
-        categoryId: '',
-        fileType: 'PDF'
+        titulo: '',
+        descripcion: '',
+        archivo: null,
+        id_curso: '',
+        id_categoria: ''
       });
+      document.getElementById('fileInput').value = '';
+      
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error al subir el recurso');
+      console.error('Error completo:', {
+        message: error.message,
+        response: error.response?.data,
+        config: error.config,
+        stack: error.stack
+      });
+      
+      const errorMsg = error.response?.data?.message || 
+                      error.message || 
+                      'Error al subir el recurso';
+      toast.error(errorMsg);
     } finally {
       setIsUploading(false);
     }
@@ -74,12 +114,12 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label">Título</label>
+            <label className="form-label">Título *</label>
             <input
               type="text"
               className="form-control"
-              name="title"
-              value={formData.title}
+              name="titulo"
+              value={formData.titulo}
               onChange={handleChange}
               required
             />
@@ -88,30 +128,31 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
             <label className="form-label">Descripción</label>
             <textarea
               className="form-control"
-              name="description"
-              value={formData.description}
+              name="descripcion"
+              value={formData.descripcion}
               onChange={handleChange}
               rows="3"
             />
           </div>
           <div className="mb-3">
-            <label className="form-label">Archivo</label>
+            <label className="form-label">Archivo *</label>
             <input
+              id="fileInput"
               type="file"
               className="form-control"
               onChange={handleFileChange}
-              accept=".pdf,.docx,.pptx"
+              accept=".pdf,.docx"
               required
             />
-            <small className="text-muted">Formatos aceptados: PDF, DOCX, PPTX (Máx. 40MB)</small>
+            <small className="text-muted">Formatos aceptados: PDF, DOCX (Máx. 25MB)</small>
           </div>
           <div className="row mb-3">
             <div className="col-md-6">
-              <label className="form-label">Curso</label>
+              <label className="form-label">Curso *</label>
               <select
                 className="form-select"
-                name="courseId"
-                value={formData.courseId}
+                name="id_curso"
+                value={formData.id_curso}
                 onChange={handleChange}
                 required
               >
@@ -124,11 +165,11 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               </select>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Categoría</label>
+              <label className="form-label">Categoría *</label>
               <select
                 className="form-select"
-                name="categoryId"
-                value={formData.categoryId}
+                name="id_categoria"
+                value={formData.id_categoria}
                 onChange={handleChange}
                 required
               >
@@ -141,26 +182,17 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
               </select>
             </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label">Tipo de Archivo</label>
-            <select
-              className="form-select"
-              name="fileType"
-              value={formData.fileType}
-              onChange={handleChange}
-              required
-            >
-              <option value="PDF">PDF</option>
-              <option value="DOCX">Word (DOCX)</option>
-              <option value="PPTX">PowerPoint (PPTX)</option>
-            </select>
-          </div>
           <button 
             type="submit" 
             className="btn btn-primary"
             disabled={isUploading}
           >
-            {isUploading ? 'Subiendo...' : 'Subir Recurso'}
+            {isUploading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Subiendo...
+              </>
+            ) : 'Subir Recurso'}
           </button>
         </form>
       </div>

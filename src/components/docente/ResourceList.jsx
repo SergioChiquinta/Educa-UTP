@@ -15,24 +15,44 @@ const ResourceList = ({ userId }) => {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/resources?authorId=${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        setLoading(true);
+        setError(null);
+        
+        const response = await axios.get(
+          'http://localhost:3000/api/docente/recursos',
+          {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
+
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error('Formato de respuesta inválido');
+        }
+
         setResources(response.data);
-        setFilteredResources(response.data);
+        
       } catch (err) {
-        setError(err.response?.data?.message || 'Error al cargar recursos');
+        console.error('Error al cargar recursos:', {
+          error: err,
+          response: err.response
+        });
+        
+        setError(err.response?.data?.message || 
+                'Error al cargar los recursos. Intente recargar la página.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchResources();
-  }, [userId, token]);
+  }, [token, userId]);
 
   const handleDelete = async (resourceId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/resources/${resourceId}`, {
+      await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setResources(resources.filter(res => res.id_recurso !== resourceId));

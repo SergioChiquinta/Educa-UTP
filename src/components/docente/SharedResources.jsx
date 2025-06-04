@@ -17,34 +17,41 @@ const SharedResources = ({ userId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Obtener recursos compartidos (excluyendo los del usuario actual)
-        const resResponse = await axios.get('http://localhost:3000/api/resources/shared', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        setLoading(true);
+        setError(null);
+        
+        // Obtener recursos compartidos
+        const resResponse = await axios.get(
+          'http://localhost:3000/api/docente/recursos-compartidos',
+          {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
+
+        if (!resResponse.data || !Array.isArray(resResponse.data)) {
+          throw new Error('Formato de respuesta inválido para recursos compartidos');
+        }
+
         setResources(resResponse.data);
-        setFilteredResources(resResponse.data);
-
-        // Obtener cursos y categorías para los filtros
-        const [coursesRes, categoriesRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/courses', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get('http://localhost:3000/api/categories', {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-
-        setCourses(coursesRes.data);
-        setCategories(categoriesRes.data);
+        
       } catch (err) {
-        setError(err.response?.data?.message || 'Error al cargar recursos compartidos');
+        console.error('Error al cargar recursos compartidos:', {
+          error: err,
+          response: err.response
+        });
+        
+        setError(err.response?.data?.message || 
+                'Error al cargar recursos compartidos. Intente recargar la página.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [userId, token]);
+  }, [token, userId]);
 
   const handleFilter = (filters) => {
     let result = resources;

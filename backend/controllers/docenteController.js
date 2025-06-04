@@ -2,11 +2,16 @@
 const db = require('../models/db');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // Configuración de Multer para recursos académicos
 const storageRecursos = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/recursos/');
+    const uploadDir = path.join(__dirname, '../../uploads/recursos');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -17,14 +22,23 @@ const storageRecursos = multer.diskStorage({
 const uploadRecurso = multer({ 
   storage: storageRecursos,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    const allowedTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword' // Añadir soporte para DOC antiguo
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('Solo se permiten archivos PDF o DOCX'), false);
     }
   },
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  limits: { 
+    fileSize: 25 * 1024 * 1024, // Aumentado a 25MB para margen
+    files: 1,
+    parts: 10 // Limitar partes del formulario
+  }
 });
 
 exports.uploadRecurso = uploadRecurso;
@@ -51,14 +65,26 @@ exports.getRecursosDocente = async (req, res) => {
   }
 };
 
-// Subir nuevo recurso
+// Modifica la función subirRecurso en docenteController.js
 exports.subirRecurso = async (req, res) => {
   try {
+    console.log('Iniciando subida de recurso...'); // Log de depuración
+    console.log('Cuerpo de la solicitud:', req.body); // Ver qué datos llegan
+    console.log('Archivo recibido:', req.file); // Ver el archivo recibido
+
     const docenteId = req.user.id;
     const { titulo, descripcion, id_curso, id_categoria } = req.body;
     
     if (!req.file) {
+      console.error('No se recibió archivo');
       return res.status(400).json({ message: 'Debes subir un archivo' });
+    }
+    
+    // Validar tipos de archivo permitidos
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      console.error('Tipo de archivo no permitido:', req.file.mimetype);
+      return res.status(400).json({ message: 'Solo se permiten archivos PDF o DOCX' });
     }
     
     const tipoArchivo = req.file.mimetype === 'application/pdf' ? 'PDF' : 'DOCX';
@@ -69,10 +95,12 @@ exports.subirRecurso = async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     
+    console.log('Ejecutando query con:', [titulo, descripcion, `recursos/${req.file.filename}`, tipoArchivo, docenteId, id_curso, id_categoria]);
+    
     const [result] = await db.promise().query(query, [
       titulo,
       descripcion,
-      req.file.filename,
+      `recursos/${req.file.filename}`,
       tipoArchivo,
       docenteId,
       id_curso,
@@ -85,13 +113,19 @@ exports.subirRecurso = async (req, res) => {
       [result.insertId, docenteId]
     );
     
+    console.log('Recurso subido exitosamente con ID:', result.insertId);
+    
     res.status(201).json({ 
       message: 'Recurso subido exitosamente',
       id_recurso: result.insertId
     });
   } catch (error) {
-    console.error('Error al subir recurso:', error);
-    res.status(500).json({ message: 'Error al subir recurso' });
+    console.error('Error detallado al subir recurso:', error);
+    res.status(500).json({ 
+      message: 'Error al subir recurso',
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 
@@ -163,5 +197,51 @@ exports.eliminarRecurso = async (req, res) => {
   } catch (error) {
     console.error('Error al eliminar recurso:', error);
     res.status(500).json({ message: 'Error al eliminar recurso' });
+  }
+};
+
+// Actualizar recurso existente
+exports.actualizarRecurso = async (req, res) => {
+  try {
+    const docenteId = req.user.id;
+    const { id_recurso } = req.params;
+    const { titulo, descripcion } = req.body;
+
+    // Verificar que el recurso pertenece al docente
+    const [recurso] = await db.promise().query(
+      'SELECT id_docente FROM recursos WHERE id_recurso = ?',
+      [id_recurso]
+    );
+    
+    if (recurso.length === 0) {
+      return res.status(404).json({ message: 'Recurso no encontrado' });
+    }
+    
+    if (recurso[0].id_docente !== docenteId) {
+      return res.status(403).json({ message: 'No autorizado para editar este recurso' });
+    }
+
+    // Actualizar el recurso
+    await db.promise().query(
+      'UPDATE recursos SET titulo = ?, descripcion = ? WHERE id_recurso = ?',
+      [titulo, descripcion, id_recurso]
+    );
+
+    // Obtener el recurso actualizado con información adicional
+    const [updatedRecurso] = await db.promise().query(`
+      SELECT r.*, c.nombre_curso, cat.nombre_categoria 
+      FROM recursos r
+      JOIN cursos c ON r.id_curso = c.id_curso
+      JOIN categorias cat ON r.id_categoria = cat.id_categoria
+      WHERE r.id_recurso = ?
+    `, [id_recurso]);
+
+    res.json({ 
+      message: 'Recurso actualizado exitosamente',
+      recurso: updatedRecurso[0]
+    });
+  } catch (error) {
+    console.error('Error al actualizar recurso:', error);
+    res.status(500).json({ message: 'Error al actualizar recurso' });
   }
 };

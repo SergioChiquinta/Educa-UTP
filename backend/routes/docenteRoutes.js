@@ -22,4 +22,7 @@ router.post('/subir-recurso',
 // Ruta para eliminar recurso
 router.delete('/eliminar-recurso/:id_recurso', docenteController.eliminarRecurso);
 
+// Ruta para actualizar recursos
+router.put('/recurso/:id_recurso', docenteController.actualizarRecurso);
+
 module.exports = router;
