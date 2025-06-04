@@ -7,7 +7,11 @@ const fs = require('fs');
 // Configuración de Multer para recursos académicos
 const storageRecursos = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../../uploads/recursos');
+
+    const uploadDir = path.resolve(__dirname, '..', 'uploads', 'recursos');
+    console.log('Ruta absoluta donde se guardará:', uploadDir);
+
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
