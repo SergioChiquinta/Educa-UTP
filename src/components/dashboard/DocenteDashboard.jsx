@@ -8,6 +8,7 @@ import ResourceList from "../docente/ResourceList";
 import ResourceUpload from "../docente/ResourceUpload";
 import SharedResources from "../docente/SharedResources";
 import { Card, Row, Col } from 'react-bootstrap';
+import LandbotWidget from './LandbotWidget';
 
 import "./Dashboard.css";
 
@@ -232,6 +233,7 @@ function Dashboard() {
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">
+      <LandbotWidget />
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
         <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
