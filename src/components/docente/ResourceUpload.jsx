@@ -37,7 +37,6 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validación mejorada
     if (
       !formData.titulo.trim() ||
       !formData.id_curso ||
@@ -53,18 +52,10 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
     try {
       const data = new FormData();
       data.append("titulo", formData.titulo);
-      data.append("descripcion", formData.descripcion || ""); // Asegurar campo
+      data.append("descripcion", formData.descripcion || "");
       data.append("archivo", formData.archivo);
       data.append("id_curso", formData.id_curso);
       data.append("id_categoria", formData.id_categoria);
-
-      // Añadir logs para depuración
-      console.log("Enviando FormData con:", {
-        titulo: formData.titulo,
-        curso: formData.id_curso,
-        categoria: formData.id_categoria,
-        archivo: formData.archivo.name,
-      });
 
       const response = await axios.post(
         "http://localhost:3000/api/docente/subir-recurso",
@@ -74,7 +65,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-          timeout: 30000, // 30 segundos timeout
+          timeout: 30000,
         }
       );
 
@@ -83,7 +74,6 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
         onUploadSuccess(response.data);
       }
 
-      // Reset mejorado
       setFormData({
         titulo: "",
         descripcion: "",
@@ -93,13 +83,6 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
       });
       document.getElementById("fileInput").value = "";
     } catch (error) {
-      console.error("Error completo:", {
-        message: error.message,
-        response: error.response?.data,
-        config: error.config,
-        stack: error.stack,
-      });
-
       const errorMsg =
         error.response?.data?.message ||
         error.message ||
@@ -111,95 +94,52 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2
-        className="text-center fw-bold mb-4"
-        style={{
-          color: "#1B1F3B",
-          fontSize: "2rem",
-          borderBottom: "3px solid #1B1F3B",
-          display: "inline-flex",
-          alignItems: "center",
-          paddingBottom: "8px",
-          marginLeft: "430px",
-          gap: "10px",
-        }}
-      >
-        <i
-          className="bi bi-book"
-          style={{ color: "#0D6EFD", fontSize: "1.6rem" }}
-        ></i>
-        Subir Recurso Educativo
+    <div className="container mt-4">
+      <h2 className="mb-4">
+        <i className="bi bi-cloud-arrow-up-fill me-2 text-primary"></i>
+        Subir Recurso Académico
       </h2>
-      <div
-        className="card shadow rounded-4 border-0"
-        style={{ backgroundColor: "#F9F9FC" }}
-      >
+      
+      <div className="card border-0 shadow-sm">
         <div className="card-body p-4">
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label fw-semibold">Título *</label>
+              <label className="form-label fw-semibold">
+                <i className="bi bi-card-heading me-2"></i>
+                Título *
+              </label>
               <input
                 type="text"
                 name="titulo"
                 value={formData.titulo}
                 onChange={handleChange}
-                placeholder="Ej. Introducción a la Física"
-                className="form-control"
+                className="form-control form-control-lg"
+                placeholder="Ej: Introducción a la Física Cuántica"
                 required
               />
             </div>
+
             <div className="mb-3">
-              <label className="form-label fw-semibold">Descripción</label>
+              <label className="form-label fw-semibold">
+                <i className="bi bi-text-paragraph me-2"></i>
+                Descripción
+              </label>
               <textarea
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleChange}
                 className="form-control"
                 rows="3"
-                placeholder="Agrega una descripción clara del recurso"
+                placeholder="Describe el contenido del recurso..."
               />
             </div>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Archivo *</label>
-              <input
-                id="fileInput"
-                type="file"
-                className="form-control"
-                onChange={handleFileChange}
-                accept=".pdf,.docx"
-                required
-              />
-              <small className="text-muted">
-                Formatos aceptados: PDF, DOCX (Máx. 25MB)
-              </small>
-            </div>
-            {/* Vista previa del archivo */}
-            {formData.archivo && (
-              <div className="table-responsive mb-4">
-                <table className="table table-bordered text-center align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Tamaño</th>
-                      <th>Tipo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>{formData.archivo.name}</td>
-                      <td>
-                        {(formData.archivo.size / 1024 / 1024).toFixed(2)} MB
-                      </td>
-                      <td>{formData.archivo.type}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+
             <div className="row mb-3">
               <div className="col-md-6">
-                <label className="form-label fw-semibold">Curso *</label>
+                <label className="form-label fw-semibold">
+                  <i className="bi bi-book me-2"></i>
+                  Curso *
+                </label>
                 <select
                   name="id_curso"
                   value={formData.id_curso}
@@ -207,7 +147,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                   className="form-select"
                   required
                 >
-                  <option value="">Seleccionar curso</option>
+                  <option value="">Seleccione un curso</option>
                   {courses.map((course) => (
                     <option key={course.id_curso} value={course.id_curso}>
                       {course.nombre_curso}
@@ -216,7 +156,10 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                 </select>
               </div>
               <div className="col-md-6">
-                <label className="form-label fw-semibold">Categoría *</label>
+                <label className="form-label fw-semibold">
+                  <i className="bi bi-tags me-2"></i>
+                  Categoría *
+                </label>
                 <select
                   name="id_categoria"
                   value={formData.id_categoria}
@@ -224,35 +167,66 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                   className="form-select"
                   required
                 >
-                  <option value="">Seleccionar categoría</option>
+                  <option value="">Seleccione una categoría</option>
                   {categories.map((category) => (
-                    <option
-                      key={category.id_categoria}
-                      value={category.id_categoria}
-                    >
+                    <option key={category.id_categoria} value={category.id_categoria}>
                       {category.nombre_categoria}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
-            <div className="text-end">
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold">
+                <i className="bi bi-file-earmark-arrow-up me-2"></i>
+                Archivo *
+              </label>
+              <div className="card border-dashed p-3">
+                <input
+                  id="fileInput"
+                  type="file"
+                  className="form-control"
+                  onChange={handleFileChange}
+                  accept=".pdf,.docx"
+                  required
+                />
+                <small className="text-muted d-block mt-2">
+                  Formatos aceptados: PDF, DOCX (Tamaño máximo: 25MB)
+                </small>
+              </div>
+              
+              {formData.archivo && (
+                <div className="mt-3">
+                  <div className="alert alert-success d-flex align-items-center p-2">
+                    <i className="bi bi-file-earmark-check fs-4 me-2"></i>
+                    <div>
+                      <strong>{formData.archivo.name}</strong>
+                      <div className="text-muted small">
+                        {(formData.archivo.size / 1024 / 1024).toFixed(2)} MB - {formData.archivo.type}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="d-flex justify-content-end">
               <button
                 type="submit"
-                className="btn btn-dark px-4"
+                className="btn btn-primary px-4 py-2"
                 disabled={isUploading}
               >
                 {isUploading ? (
                   <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                     Subiendo...
                   </>
                 ) : (
-                  "Subir Recurso"
+                  <>
+                    <i className="bi bi-upload me-2"></i>
+                    Subir Recurso
+                  </>
                 )}
               </button>
             </div>

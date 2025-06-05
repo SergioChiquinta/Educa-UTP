@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
+import "./ResourceTables.css";
 
 const ResourceList = () => {
   const [courses, setCourses] = useState([]);
@@ -147,24 +150,27 @@ const ResourceList = () => {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div className="container mt-4 px-0">
-      <h2 className="mb-4">Mis Recursos</h2>
+    <div className="container mt-4 mt-4">
+      <h2 className="mb-4">
+        <i className="bi bi-archive me-2"></i> 
+        Mis Recursos
+      </h2>
       
       {resources.length === 0 ? (
         <div className="alert alert-info">No has subido ningún recurso aún.</div>
       ) : (
         <div className="table-responsive">
           <table className="table table-bordered table-hover align-middle mb-0">
-            <thead className="table-dark">
+            <thead className="table-dark d-md-table-header-group">
               <tr>
-                <th scope="col" style={{ minWidth: '150px' }}>Título</th>
-                <th scope="col" style={{ minWidth: '100px' }} className="d-md-table-cell">Descripción</th>
-                <th scope="col" style={{ minWidth: '120px' }} className="d-sm-table-cell">Curso</th>
-                <th scope="col" style={{ minWidth: '120px' }} className="d-md-table-cell">Categoría</th>
-                <th scope="col" style={{ minWidth: '80px' }}>Tipo</th>
-                <th scope="col" style={{ minWidth: '100px' }} className="d-sm-table-cell">Fecha</th>
-                <th scope="col" style={{ minWidth: '120px' }}>Acciones</th>
-              </tr>
+                <th scope="col">Título</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Categoría</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Acciones</th>
+             </tr>
             </thead>
             <tbody>
               {resources.map(resource => (
@@ -182,7 +188,7 @@ const ResourceList = () => {
                       <span className="d-md-inline">{resource.titulo}</span>
                     )}
                   </td>
-                  <td className="d-md-table-cell" data-label="Descripción">
+                  <td data-label="Descripción">
                     {editingId === resource.id_recurso ? (
                       <textarea
                         className="form-control form-control-sm"
@@ -195,7 +201,7 @@ const ResourceList = () => {
                       <span>{resource.descripcion || 'Sin descripción'}</span>
                     )}
                   </td>
-                  <td className="d-sm-table-cell" data-label="Curso">
+                  <td data-label="Curso">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
@@ -213,7 +219,7 @@ const ResourceList = () => {
                       <span>{resource.nombre_curso}</span>
                     )}
                   </td>
-                  <td className="d-md-table-cell" data-label="Categoría">
+                  <td data-label="Categoría">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
@@ -232,9 +238,11 @@ const ResourceList = () => {
                     )}
                   </td>
                   <td data-label="Tipo">
-                    <span className="badge bg-secondary">{resource.tipo_archivo}</span>
+                    <span className={`badge ${resource.tipo_archivo === 'PDF' ? 'bg-danger' : 'bg-primary'}`}>
+                      {resource.tipo_archivo}
+                    </span>
                   </td>
-                  <td className="d-sm-table-cell" data-label="Fecha">
+                  <td data-label="Fecha">
                     <span className="text-nowrap">{formatDate(resource.fecha_subida)}</span>
                   </td>
                   <td data-label="Acciones">

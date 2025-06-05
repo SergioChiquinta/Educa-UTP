@@ -1,182 +1,189 @@
 
 // src/components/docente/SharedResources.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import { Modal, Button } from 'react-bootstrap';
+import { renderAsync } from 'docx-preview';
+import "./ResourceTables.css";
+import "./ResourceModalPreview.css";
 
-const SharedResources = ({ userId }) => {
+const SharedResources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    curso: '',
-    categoria: '',
-    tipo: ''
-  });
+  const [showWordModal, setShowWordModal] = useState(false);
+  const [currentWordResource, setCurrentWordResource] = useState(null);
+  const previewContainerRef = useRef(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchSharedResources = async () => {
+    const fetchResources = async () => {
       try {
         setLoading(true);
-        setError(null);
-        
-        // Obtener recursos compartidos
-        const resResponse = await axios.get(
+        const response = await axios.get(
           'http://localhost:3000/api/docente/recursos-compartidos',
           {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Cache-Control': 'no-cache'
-            }
+            headers: { Authorization: `Bearer ${token}` }
           }
         );
-
-        if (!resResponse.data || !Array.isArray(resResponse.data)) {
-          throw new Error('Formato de respuesta inválido para recursos compartidos');
-        }
-
-        setResources(resResponse.data);
-        
+        setResources(response.data);
       } catch (err) {
-        console.error('Error al cargar recursos compartidos:', {
-          error: err,
-          response: err.response
-        });
-        
-        setError(err.response?.data?.message || 
-                'Error al cargar recursos compartidos. Intente recargar la página.');
+        console.error('Error:', err.response?.data || err.message);
+        setError('Error al cargar los recursos');
+        toast.error('Error al cargar los recursos');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [token, userId]);
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
-  const filteredResources = resources.filter(resource => {
-    return (
-      (filters.curso === '' || resource.id_curso.toString() === filters.curso) &&
-      (filters.categoria === '' || resource.id_categoria.toString() === filters.categoria) &&
-      (filters.tipo === '' || resource.tipo_archivo === filters.tipo)
-    );
-  });
-
-  const downloadResource = (filename) => {
-    window.open(`http://localhost:3000/api/docente/descargar/${filename}`, '_blank');
-  };
+    fetchResources();
+  }, [token]);
 
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('es-ES', options);
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
-  // Obtener opciones únicas para los filtros
-  const uniqueCourses = [...new Set(resources.map(r => r.id_curso))];
-  const uniqueCategories = [...new Set(resources.map(r => r.id_categoria))];
-  const uniqueTypes = [...new Set(resources.map(r => r.tipo_archivo))];
+  const handlePreview = async (resource) => {
+    if (resource.tipo_archivo === 'PDF') {
+      window.open(`http://localhost:3000/uploads/${resource.archivo_url}`, '_blank');
+    } else if (resource.tipo_archivo === 'DOCX') {
+      try {
+        setCurrentWordResource(resource);
+        setShowWordModal(true);
+        
+        // Esperar a que el modal esté montado en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const response = await fetch(`http://localhost:3000/uploads/${resource.archivo_url}`);
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // Limpiar el contenedor antes de renderizar
+        previewContainerRef.current.innerHTML = '';
+        
+        await renderAsync(
+          arrayBuffer,
+          previewContainerRef.current,
+          null,
+          {
+            className: 'docx-preview', // Clase CSS para el contenedor
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            ignoreFonts: false,
+            breakPages: true,
+            debug: false
+          }
+        );
+      } catch (error) {
+        console.error('Error al previsualizar DOCX:', error);
+        toast.error('Error al cargar la previsualización');
+        setShowWordModal(false);
+      }
+    }
+  };
 
-  if (loading) return <div className="text-center mt-4">Cargando...</div>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  const handleDownload = async (resource) => {
+    try {
+      await axios.post(
+        'http://localhost:3000/api/docente/registrar-descarga',
+        { id_recurso: resource.id_recurso },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const fileUrl = `http://localhost:3000/uploads/${resource.archivo_url}?download=true`;
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success('Descarga iniciada');
+    } catch (err) {
+      console.error('Error al descargar:', err);
+      toast.error('Error al registrar la descarga');
+    }
+  };
+
+  if (loading) return (
+    <div className="text-center my-5">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Cargando...</span>
+      </div>
+      <p className="mt-2">Cargando recursos académicos...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="alert alert-danger my-4">
+      <i className="bi bi-exclamation-triangle me-2"></i>
+      {error}
+    </div>
+  );
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Recursos Compartidos por Otros Docentes</h2>
+      <h2 className="mb-4">
+        <i className="bi bi-file-earmark-arrow-down me-2"></i>
+        Recursos Académicos
+      </h2>
       
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">Filtros</h5>
-          <div className="row">
-            <div className="col-md-4">
-              <label className="form-label">Curso</label>
-              <select
-                className="form-select"
-                name="curso"
-                value={filters.curso}
-                onChange={handleFilterChange}
-              >
-                <option value="">Todos los cursos</option>
-                {uniqueCourses.map(id => {
-                  const course = resources.find(r => r.id_curso === id);
-                  return course ? (
-                    <option key={id} value={id}>{course.nombre_curso}</option>
-                  ) : null;
-                })}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Categoría</label>
-              <select
-                className="form-select"
-                name="categoria"
-                value={filters.categoria}
-                onChange={handleFilterChange}
-              >
-                <option value="">Todas las categorías</option>
-                {uniqueCategories.map(id => {
-                  const category = resources.find(r => r.id_categoria === id);
-                  return category ? (
-                    <option key={id} value={id}>{category.nombre_categoria}</option>
-                  ) : null;
-                })}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Tipo de archivo</label>
-              <select
-                className="form-select"
-                name="tipo"
-                value={filters.tipo}
-                onChange={handleFilterChange}
-              >
-                <option value="">Todos los tipos</option>
-                {uniqueTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+      {resources.length === 0 ? (
+        <div className="alert alert-info">
+          No hay recursos disponibles en este momento.
         </div>
-      </div>
-
-      {filteredResources.length === 0 ? (
-        <div className="alert alert-info">No se encontraron recursos con los filtros seleccionados.</div>
       ) : (
         <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
+          <table className="table table-bordered table-hover">
+            <thead className="table-dark">
               <tr>
                 <th>Título</th>
                 <th>Descripción</th>
-                <th>Autor</th>
                 <th>Curso</th>
                 <th>Categoría</th>
                 <th>Tipo</th>
                 <th>Fecha</th>
-                <th>Acción</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filteredResources.map(resource => (
+              {resources.map(resource => (
                 <tr key={resource.id_recurso}>
-                  <td>{resource.titulo}</td>
-                  <td>{resource.descripcion || 'Sin descripción'}</td>
-                  <td>{resource.autor}</td>
-                  <td>{resource.nombre_curso}</td>
-                  <td>{resource.nombre_categoria}</td>
-                  <td>{resource.tipo_archivo}</td>
-                  <td>{formatDate(resource.fecha_subida)}</td>
-                  <td>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => downloadResource(resource.archivo_url)}
-                    >
-                      Descargar
-                    </button>
+                  <td data-label="Título">{resource.titulo}</td>
+                  <td data-label="Descripción">{resource.descripcion || '-'}</td>
+                  <td data-label="Curso">{resource.nombre_curso}</td>
+                  <td data-label="Categoría">{resource.nombre_categoria}</td>
+                  <td data-label="Tipo">
+                    <span className={`badge ${
+                      resource.tipo_archivo === 'PDF' ? 'bg-danger' : 'bg-primary'
+                    }`}>
+                      {resource.tipo_archivo}
+                    </span>
+                  </td>
+                  <td data-label="Fecha">{formatDate(resource.fecha_subida)}</td>
+                  <td data-label="Acciones">
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handlePreview(resource)}
+                        disabled={!['PDF', 'DOCX'].includes(resource.tipo_archivo)}
+                        title="Previsualizar"
+                      >
+                        <i className="bi bi-eye"></i>
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-success"
+                        onClick={() => handleDownload(resource)}
+                        title="Descargar"
+                      >
+                        <i className="bi bi-download"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -184,6 +191,35 @@ const SharedResources = ({ userId }) => {
           </table>
         </div>
       )}
+
+      {/* Modal para previsualización de Word */}
+      <Modal show={showWordModal} onHide={() => setShowWordModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-file-earmark-word me-2"></i>
+            {currentWordResource?.titulo}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ height: '70vh', overflow: 'auto' }}>
+          <div ref={previewContainerRef} className="docx-container" />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="primary" 
+            onClick={() => {
+              if (currentWordResource) {
+                handleDownload(currentWordResource);
+              }
+            }}
+          >
+            <i className="bi bi-download me-2"></i>
+            Descargar
+          </Button>
+          <Button variant="secondary" onClick={() => setShowWordModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

@@ -135,25 +135,46 @@ exports.subirRecurso = async (req, res) => {
 // Obtener recursos compartidos con el docente
 exports.getRecursosCompartidos = async (req, res) => {
   try {
-    const docenteId = req.user.id;
-    
     const query = `
-      SELECT r.*, c.nombre_curso, cat.nombre_categoria, 
-             u.nombre_completo AS nombre_autor
+      SELECT 
+        r.*, 
+        c.nombre_curso, 
+        cat.nombre_categoria
       FROM recursos r
       JOIN cursos c ON r.id_curso = c.id_curso
       JOIN categorias cat ON r.id_categoria = cat.id_categoria
-      JOIN autores_recursos ar ON r.id_recurso = ar.id_recurso
-      JOIN usuarios u ON ar.id_autor = u.id_usuario
-      WHERE r.id_docente != ? AND ar.id_autor = ?
       ORDER BY r.fecha_subida DESC
     `;
     
-    const [recursos] = await db.promise().query(query, [docenteId, docenteId]);
+    const [recursos] = await db.promise().query(query);
     res.json(recursos);
   } catch (error) {
-    console.error('Error al obtener recursos compartidos:', error);
-    res.status(500).json({ message: 'Error al obtener recursos compartidos' });
+    console.error('Error al obtener recursos:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener recursos',
+      error: error.message 
+    });
+  }
+};
+
+// Registrar descargas hechas
+exports.registrarDescarga = async (req, res) => {
+  try {
+    const { id_recurso } = req.body;
+    const id_usuario = req.user.id;
+    
+    await db.promise().query(
+      'INSERT INTO estadisticas_descarga (id_usuario, id_recurso) VALUES (?, ?)',
+      [id_usuario, id_recurso]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al registrar descarga:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al registrar descarga' 
+    });
   }
 };
 
@@ -257,5 +278,32 @@ exports.actualizarRecurso = async (req, res) => {
       message: 'Error al actualizar recurso',
       error: error.message 
     });
+  }
+};
+
+// Obtener estadísticas del docente
+exports.getEstadisticasDocente = async (req, res) => {
+  try {
+    const docenteId = req.user.id;
+    
+    // Recursos subidos por el docente
+    const [recursosSubidos] = await db.promise().query(
+      'SELECT COUNT(*) as total FROM recursos WHERE id_docente = ?',
+      [docenteId]
+    );
+    
+    // Descargas hechas por el docente
+    const [descargasHechas] = await db.promise().query(
+      'SELECT COUNT(*) as total FROM estadisticas_descarga WHERE id_usuario = ?',
+      [docenteId]
+    );
+    
+    res.json({
+      recursosSubidos: recursosSubidos[0].total,
+      descargasHechas: descargasHechas[0].total
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ message: 'Error al obtener estadísticas' });
   }
 };

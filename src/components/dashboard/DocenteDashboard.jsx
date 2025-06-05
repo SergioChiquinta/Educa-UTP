@@ -6,21 +6,29 @@ import { toast } from "react-toastify";
 import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
 import ResourceUpload from "../docente/ResourceUpload";
+import SharedResources from "../docente/SharedResources";
+import { Card, Row, Col } from 'react-bootstrap';
 
 import "./Dashboard.css";
 
 function Dashboard() {
-  const handleUploadSuccess = (uploadedResource) => {
-    toast.success("Recurso subido correctamente");
-    setActiveSection("resources"); // Redirige a la lista de recursos actualizada
-  };
+  // 1. Hooks de React (useNavigate, etc.)
+  const navigate = useNavigate();
+  
+  // 2. Obtener valores iniciales de localStorage/sessionStorage
+  const token = localStorage.getItem("token");
 
+  // 3. Todos los estados declarados juntos al inicio
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState("welcome");
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [estadisticas, setEstadisticas] = useState({
+    recursosSubidos: 0,
+    descargasHechas: 0
+  });
   const [user, setUser] = useState({
     nombre_completo: "",
     correo: "",
@@ -30,17 +38,128 @@ function Dashboard() {
     password: "",
   });
 
-  const token = localStorage.getItem("token");
+  // 4. Funciones del componente (manejadores de eventos)
+  const handleUploadSuccess = (uploadedResource) => {
+    toast.success("Recurso subido correctamente");
+    setActiveSection("resources");
+  };
 
-  // Carga los cursos y categorías al montar el componente
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  const showSection = (section) => {
+    setActiveSection(section);
+    setIsEditing(false);
+  };
+
+  const handleEdit = async () => {
+    if (isEditing) {
+      try {
+        await axios.put(
+          "http://localhost:3000/api/profile",
+          {
+            nombre_completo: user.nombre_completo,
+            correo: user.correo,
+            password: user.password,
+            area_interes: user.area_interes,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append("profile_image", selectedFile);
+          const pictureResponse = await axios.put(
+            "http://localhost:3000/api/profile/picture",
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+          setUser(prev => ({
+            ...prev,
+            foto_perfil: pictureResponse.data.filename,
+            password: "",
+          }));
+        }
+
+        const refreshed = await axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setUser({
+          nombre_completo: refreshed.data.nombre_completo,
+          correo: refreshed.data.correo,
+          nombre_rol: refreshed.data.nombre_rol,
+          area_interes: refreshed.data.area_interes || "",
+          foto_perfil: refreshed.data.foto_perfil?.split("/").pop() || "",
+          password: "",
+        });
+
+        alert(selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado");
+        setSelectedFile(null);
+      } catch (error) {
+        console.error("Error:", error);
+        alert(error.response?.data?.message || "Error al actualizar");
+      }
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleChange = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setUser(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.match("image.*")) {
+        alert("Por favor selecciona un archivo de imagen válido");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen no debe exceder los 2MB");
+        return;
+      }
+      setSelectedFile(file);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setUser(prev => ({ ...prev, foto_perfil: event.target.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 5. Efectos (useEffect)
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+      return;
+    }
+  }, [token, navigate]);
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         const response = await axios.get(
           "http://localhost:3000/api/docente/datos-utiles",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setCourses(response.data.cursos);
         setCategories(response.data.categorias);
@@ -53,18 +172,12 @@ function Dashboard() {
   }, [token]);
 
   useEffect(() => {
-    if (!token) {
-      navigate("/");
-      return;
-    }
-
     const loadProfile = async () => {
       try {
         const response = await axios.get("http://localhost:3000/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Extrae solo el nombre del archivo si hay una URL completa
         let foto_perfil = response.data.foto_perfil;
         if (foto_perfil && foto_perfil.includes("/")) {
           foto_perfil = foto_perfil.split("/").pop();
@@ -84,138 +197,38 @@ function Dashboard() {
       }
     };
 
-    loadProfile();
+    if (token) loadProfile();
   }, [token, navigate]);
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
-  const showSection = (section) => {
-    setActiveSection(section);
-    setIsEditing(false);
-  };
-
-  const handleEdit = async () => {
-    if (isEditing) {
-      try {
-        // Primero actualizamos los datos del perfil
-        await axios.put(
-          "http://localhost:3000/api/profile",
-          {
-            nombre_completo: user.nombre_completo,
-            correo: user.correo,
-            password: user.password,
-            area_interes: user.area_interes,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        // Luego actualizamos la foto si hay una seleccionada
-        if (selectedFile) {
-          const formData = new FormData();
-          formData.append("profile_image", selectedFile);
-
-          const pictureResponse = await axios.put(
-            "http://localhost:3000/api/profile/picture",
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          // Forzar una actualización completa del estado
-          setUser((prev) => ({
-            ...prev,
-            foto_perfil: pictureResponse.data.filename,
-            password: "", // Limpiar contraseña
-          }));
-        }
-
-        // Recargar los datos del servidor para asegurar consistencia
-        const refreshed = await axios.get("http://localhost:3000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser({
-          nombre_completo: refreshed.data.nombre_completo,
-          correo: refreshed.data.correo,
-          nombre_rol: refreshed.data.nombre_rol,
-          area_interes: refreshed.data.area_interes || "",
-          foto_perfil: refreshed.data.foto_perfil?.split("/").pop() || "",
-          password: "",
-        });
-
-        alert(
-          selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado"
-        );
-        setSelectedFile(null);
-      } catch (error) {
-        console.error("Error:", error);
-        alert(error.response?.data?.message || "Error al actualizar");
-      }
-    }
-    setIsEditing(!isEditing);
-  };
-
-  const handleChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
-  };
-
-  const handleEditChange = (e) => {
-  const { name, value } = e.target;
-  setEditForm((prevForm) => ({
-    ...prevForm,
-    [name]: value
-  }));
-};
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
-
-  // Foto de perfil
-  const [selectedFile, setSelectedFile] = useState(null);
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Validación básica del tipo de archivo
-      if (!file.type.match("image.*")) {
-        alert("Por favor selecciona un archivo de imagen válido");
-        return;
-      }
-      // Validación de tamaño (ejemplo: máximo 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        alert("La imagen no debe exceder los 2MB");
-        return;
-      }
-      setSelectedFile(file);
-
-      // Vista previa inmediata (opcional)
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUser((prev) => ({ ...prev, foto_perfil: event.target.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Sidebar Diseño
   useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (sidebarCollapsed && isMobile) {
-      document.body.classList.remove("sidebar-open");
-    } else if (!sidebarCollapsed && isMobile) {
-      document.body.classList.add("sidebar-open");
-    }
-  }, [sidebarCollapsed]);
+    const loadEstadisticas = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/docente/estadisticas",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEstadisticas(response.data);
+      } catch (error) {
+        console.error("Error al cargar estadísticas:", error);
+      }
+    };
+
+    if (token) loadEstadisticas();
+  }, [token, activeSection]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 767;
+      if (isMobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">
@@ -348,20 +361,53 @@ function Dashboard() {
         {/* Main Content */}
         <div className="flex-grow-1 p-4 bg-light">
           {activeSection === "welcome" && (
-            <div className="text-center mt-5">
-              <h2
-                className="fw-bold text-center"
-                style={{
-                  color: "#1B1F3B",
-                  fontSize: "2rem",
-                  borderBottom: "3px solid #1B1F3B",
-                  display: "inline-block",
-                  paddingBottom: "8px",
-                }}
-              >
-                ¡Bienvenido, {user.nombre_rol}!
-              </h2>
-              <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+            <div>
+              <div className="text-center mt-3">
+                <h2
+                  className="fw-bold text-center"
+                  style={{
+                    color: "#1B1F3B",
+                    fontSize: "2rem",
+                    borderBottom: "3px solid #1B1F3B",
+                    display: "inline-block",
+                    paddingBottom: "8px",
+                  }}
+                >
+                  ¡Bienvenido, {user.nombre_rol}!
+                </h2>
+                <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+              </div>
+
+              <Row className="mt-4 g-4">
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Recursos Subidos</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.recursosSubidos}
+                      </Card.Text>
+                      <small className="text-muted">Total de recursos compartidos</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-download fs-1 text-success"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Descargas Realizadas</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.descargasHechas}
+                      </Card.Text>
+                      <small className="text-muted">Total de descargas realizadas</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </div>
           )}
           {activeSection === "profile" && (
@@ -472,7 +518,7 @@ function Dashboard() {
             />
           )}
           {activeSection === "shared" && (
-            <SharedResouces/>
+            <SharedResources/>
           )}
         </div>
       </div>
