@@ -3,63 +3,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SharedResources from "../docente/SharedResources";
+import LandbotWidget from './LandbotWidget';
 
 import "./Dashboard.css";
 
 function Dashboard() {
-    const [courses, setCourses] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const userId = localStorage.getItem("userId"); // Asegúrate de guardar esto en el login
-    const navigate = useNavigate();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [activeSection, setActiveSection] = useState("welcome");
-    const [isEditing, setIsEditing] = useState(false);
-    const [user, setUser] = useState({
-      nombre_completo: "",
-      correo: "",
-      nombre_rol: "",
-      area_interes: "",
-      foto_perfil: "",
-      password: "",
-    });
+    // 1. Hooks de React (useNavigate, etc.)
+  const navigate = useNavigate();
   
-    const token = localStorage.getItem("token");
+  // 2. Obtener valores iniciales de localStorage/sessionStorage
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/");
-      return;
-    }
+  // 3. Todos los estados declarados juntos al inicio
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeSection, setActiveSection] = useState("welcome");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [estadisticas, setEstadisticas] = useState({
+    recursosSubidos: 0,
+    descargasHechas: 0
+  });
+  const [user, setUser] = useState({
+    nombre_completo: "",
+    correo: "",
+    nombre_rol: "",
+    area_interes: "",
+    foto_perfil: "",
+    password: "",
+  });
 
-    const loadProfile = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Extrae solo el nombre del archivo si hay una URL completa
-        let foto_perfil = response.data.foto_perfil;
-        if (foto_perfil && foto_perfil.includes("/")) {
-          foto_perfil = foto_perfil.split("/").pop();
-        }
-
-        setUser({
-          nombre_completo: response.data.nombre_completo,
-          correo: response.data.correo,
-          nombre_rol: response.data.nombre_rol,
-          area_interes: response.data.area_interes || "",
-          foto_perfil: foto_perfil || "",
-          password: "",
-        });
-      } catch (error) {
-        console.error("Error al cargar perfil:", error);
-        navigate("/");
-      }
-    };
-
-    loadProfile();
-  }, [token, navigate]);
-
+  // 4. Funciones del componente (manejadores de eventos)
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
@@ -72,7 +46,6 @@ function Dashboard() {
   const handleEdit = async () => {
     if (isEditing) {
       try {
-        // Primero actualizamos los datos del perfil
         await axios.put(
           "http://localhost:3000/api/profile",
           {
@@ -81,16 +54,12 @@ function Dashboard() {
             password: user.password,
             area_interes: user.area_interes,
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Luego actualizamos la foto si hay una seleccionada
         if (selectedFile) {
           const formData = new FormData();
           formData.append("profile_image", selectedFile);
-
           const pictureResponse = await axios.put(
             "http://localhost:3000/api/profile/picture",
             formData,
@@ -101,16 +70,13 @@ function Dashboard() {
               },
             }
           );
-
-          // Forzar una actualización completa del estado
-          setUser((prev) => ({
+          setUser(prev => ({
             ...prev,
             foto_perfil: pictureResponse.data.filename,
-            password: "", // Limpiar contraseña
+            password: "",
           }));
         }
 
-        // Recargar los datos del servidor para asegurar consistencia
         const refreshed = await axios.get("http://localhost:3000/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -124,9 +90,7 @@ function Dashboard() {
           password: "",
         });
 
-        alert(
-          selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado"
-        );
+        alert(selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado");
         setSelectedFile(null);
       } catch (error) {
         console.error("Error:", error);
@@ -146,45 +110,90 @@ function Dashboard() {
     navigate("/");
   };
 
-  // Foto de perfil
-  const [selectedFile, setSelectedFile] = useState(null);
-
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // Validación básica del tipo de archivo
       if (!file.type.match("image.*")) {
         alert("Por favor selecciona un archivo de imagen válido");
         return;
       }
-      // Validación de tamaño (ejemplo: máximo 2MB)
       if (file.size > 2 * 1024 * 1024) {
         alert("La imagen no debe exceder los 2MB");
         return;
       }
       setSelectedFile(file);
 
-      // Vista previa inmediata (opcional)
       const reader = new FileReader();
       reader.onload = (event) => {
-        setUser((prev) => ({ ...prev, foto_perfil: event.target.result }));
+        setUser(prev => ({ ...prev, foto_perfil: event.target.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Sidebar Diseño
-    useEffect(() => {
-      const isMobile = window.innerWidth <= 768;
-      if (sidebarCollapsed && isMobile) {
-        document.body.classList.remove("sidebar-open");
-      } else if (!sidebarCollapsed && isMobile) {
-        document.body.classList.add("sidebar-open");
+  // 5. Efectos (useEffect)
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let foto_perfil = response.data.foto_perfil;
+        if (foto_perfil && foto_perfil.includes("/")) {
+          foto_perfil = foto_perfil.split("/").pop();
+        }
+
+        setUser({
+          nombre_completo: response.data.nombre_completo,
+          correo: response.data.correo,
+          nombre_rol: response.data.nombre_rol,
+          area_interes: response.data.area_interes || "",
+          foto_perfil: foto_perfil || "",
+          password: "",
+        });
+      } catch (error) {
+        console.error("Error al cargar perfil:", error);
+        navigate("/");
       }
-    }, [sidebarCollapsed]);
+    };
+
+    if (token) loadProfile();
+  }, [token, navigate]);
+
+  useEffect(() => {
+    const loadEstadisticas = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/docente/estadisticas",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEstadisticas(response.data);
+      } catch (error) {
+        console.error("Error al cargar estadísticas:", error);
+      }
+    };
+
+    if (token) loadEstadisticas();
+  }, [token, activeSection]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 767;
+      if (isMobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">
+      <LandbotWidget />
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
         <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
@@ -411,8 +420,8 @@ function Dashboard() {
               </div>
             </div>
           )}
-          {activeSection === "shared" && userId && (
-            <SharedResouces userId={userId} />
+          {activeSection === "shared" && (
+            <SharedResources/>
           )}
         </div>
       </div>
