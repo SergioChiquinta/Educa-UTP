@@ -203,7 +203,7 @@ function Dashboard() {
     const loadEstadisticas = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/docente/estadisticas",
+          "http://localhost:3000/api/general/estadisticas",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEstadisticas(response.data);
@@ -339,6 +339,8 @@ function Dashboard() {
               <a
                 href="https://tubiblioteca.utp.edu.pe"
                 className="nav-link text-white d-flex align-items-center gap-2"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="bi bi-book" style={{ color: "#0DCAF0" }}></i>
                 UTP+biblio

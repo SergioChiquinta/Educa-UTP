@@ -289,6 +289,8 @@ function Dashboard() {
               <a
                 href="https://tubiblioteca.utp.edu.pe"
                 className="nav-link text-white d-flex align-items-center gap-2"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="bi bi-book" style={{ color: "#0DCAF0" }}></i>
                 UTP+biblio
@@ -335,11 +337,9 @@ function Dashboard() {
                       <div className="d-flex align-items-center justify-content-center mb-3">
                         <i className="bi bi-cloud-arrow-up fs-1 text-primary"></i>
                       </div>
-                      <Card.Title className="fw-bold">Recursos Subidos</Card.Title>
-                      <Card.Text className="display-4 fw-bold text-dark">
-                        {estadisticas.recursosSubidos}
-                      </Card.Text>
-                      <small className="text-muted">Total de recursos compartidos</small>
+                      <Card.Title className="fw-bold">Área de Interés</Card.Title>
+                      <Card.Text className="h5 fw-bold text-dark">{user.area_interes || "No definido"}</Card.Text>
+                      <small className="text-muted">Tema favorito declarado</small>
                     </Card.Body>
                   </Card>
                 </Col>

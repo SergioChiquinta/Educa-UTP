@@ -281,7 +281,7 @@ exports.actualizarRecurso = async (req, res) => {
   }
 };
 
-// Obtener estadísticas del docente
+// Obtener estadísticas del docente y Admin
 exports.getEstadisticasDocente = async (req, res) => {
   try {
     const docenteId = req.user.id;
@@ -298,9 +298,15 @@ exports.getEstadisticasDocente = async (req, res) => {
       [docenteId]
     );
     
+    // Cantidad de Usuarios Registrados para el Admin
+    const [usuariosRegistrados] = await db.promise().query(
+      'SELECT COUNT(*) as total FROM usuarios'
+    );
+    
     res.json({
       recursosSubidos: recursosSubidos[0].total,
-      descargasHechas: descargasHechas[0].total
+      descargasHechas: descargasHechas[0].total,
+      usuariosRegistrados: usuariosRegistrados[0].total
     });
   } catch (error) {
     console.error('Error al obtener estadísticas:', error);

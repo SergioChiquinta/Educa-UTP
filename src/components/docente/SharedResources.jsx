@@ -101,7 +101,7 @@ const SharedResources = () => {
   const handleDownload = async (resource) => {
     try {
       await axios.post(
-        'http://localhost:3000/api/docente/registrar-descarga',
+        'http://localhost:3000/api/general/registrar-descarga',
         { id_recurso: resource.id_recurso },
         { headers: { Authorization: `Bearer ${token}` } }
       );
