@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import SharedResources from "../docente/SharedResources";
+import { Card, Row, Col } from 'react-bootstrap';
 import LandbotWidget from './LandbotWidget';
-
-import "./Dashboard.css";
+import '../../styles/Dashboard.css';
 
 function Dashboard() {
     // 1. Hooks de React (useNavigate, etc.)
@@ -165,7 +165,7 @@ function Dashboard() {
     const loadEstadisticas = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/docente/estadisticas",
+          "http://localhost:3000/api/general/estadisticas",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEstadisticas(response.data);
@@ -311,21 +311,55 @@ function Dashboard() {
         {/* Main Content */}
         <div className="flex-grow-1 p-4 bg-light">
           {activeSection === "welcome" && (
-            <div className="text-center mt-5">
-              <h2
-                className="fw-bold text-center"
-                style={{
-                  color: "#1B1F3B",
-                  fontSize: "2rem",
-                  borderBottom: "3px solid #1B1F3B",
-                  display: "inline-block",
-                  paddingBottom: "8px",
-                }}
-              >
-                ¡Bienvenido, {user.nombre_rol}!
-              </h2>
-              <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+            <div>
+              <div className="text-center mt-3">
+                <h2
+                  className="fw-bold text-center"
+                  style={{
+                    color: "#1B1F3B",
+                    fontSize: "2rem",
+                    borderBottom: "3px solid #1B1F3B",
+                    display: "inline-block",
+                    paddingBottom: "8px",
+                  }}
+                >
+                  ¡Bienvenido, {user.nombre_rol}!
+                </h2>
+                <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+              </div>
+
+              <Row className="mt-4 g-4">
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Recursos Subidos</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.recursosSubidos}
+                      </Card.Text>
+                      <small className="text-muted">Total de recursos compartidos</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-download fs-1 text-success"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Descargas Realizadas</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.descargasHechas}
+                      </Card.Text>
+                      <small className="text-muted">Total de descargas realizadas</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </div>
+
           )}
           {activeSection === "profile" && (
             <div className="container mt-5">

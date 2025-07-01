@@ -10,7 +10,7 @@ router.use(isDocente);
 
 // Rutas para recursos del docente
 router.get('/recursos', docenteController.getRecursosDocente);
-router.get('/recursos-compartidos', docenteController.getRecursosCompartidos);
+// router.get('/recursos-compartidos', docenteController.getRecursosCompartidos); -> Sólo para docentes, pero este es general así q lo quitaremos
 router.get('/datos-utiles', docenteController.getCursosYCategorias);
 
 // Ruta para subir recurso (con middleware de multer)

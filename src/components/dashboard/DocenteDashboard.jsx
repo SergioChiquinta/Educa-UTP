@@ -3,14 +3,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
 import ResourceUpload from "../docente/ResourceUpload";
 import SharedResources from "../docente/SharedResources";
 import { Card, Row, Col } from 'react-bootstrap';
 import LandbotWidget from './LandbotWidget';
-
-import "./Dashboard.css";
+import '../../styles/Dashboard.css';
 
 function Dashboard() {
   // 1. Hooks de React (useNavigate, etc.)
