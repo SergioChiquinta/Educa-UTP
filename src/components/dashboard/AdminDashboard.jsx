@@ -2,62 +2,36 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-import "./Dashboard.css";
+import { toast } from "react-toastify";
+import SharedResources from "../docente/SharedResources";
+import UserManagement from "../admin-gestion-usuarios/UserManagement";
+import { Card, Row, Col } from 'react-bootstrap';
+import LandbotWidget from './LandbotWidget';
+import '../../styles/Dashboard.css';
 
 function Dashboard() {
-    const [courses, setCourses] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const userId = localStorage.getItem("userId"); // Asegúrate de guardar esto en el login
-    const navigate = useNavigate();
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [activeSection, setActiveSection] = useState("welcome");
-    const [isEditing, setIsEditing] = useState(false);
-    const [user, setUser] = useState({
-      nombre_completo: "",
-      correo: "",
-      nombre_rol: "",
-      area_interes: "",
-      foto_perfil: "",
-      password: "",
-    });
-  
-    const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    if (!token) {
-      navigate("/");
-      return;
-    }
-
-    const loadProfile = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/api/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Extrae solo el nombre del archivo si hay una URL completa
-        let foto_perfil = response.data.foto_perfil;
-        if (foto_perfil && foto_perfil.includes("/")) {
-          foto_perfil = foto_perfil.split("/").pop();
-        }
-
-        setUser({
-          nombre_completo: response.data.nombre_completo,
-          correo: response.data.correo,
-          nombre_rol: response.data.nombre_rol,
-          area_interes: response.data.area_interes || "",
-          foto_perfil: foto_perfil || "",
-          password: "",
-        });
-      } catch (error) {
-        console.error("Error al cargar perfil:", error);
-        navigate("/");
-      }
-    };
-
-    loadProfile();
-  }, [token, navigate]);
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeSection, setActiveSection] = useState("welcome");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [estadisticas, setEstadisticas] = useState({
+    usuariosRegistrados: 0,
+    recursosSubidos: 0,
+    descargasHechas: 0
+  });
+  const [user, setUser] = useState({
+    nombre_completo: "",
+    correo: "",
+    nombre_rol: "",
+    area_interes: "",
+    foto_perfil: "",
+    password: "",
+  });
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -71,7 +45,6 @@ function Dashboard() {
   const handleEdit = async () => {
     if (isEditing) {
       try {
-        // Primero actualizamos los datos del perfil
         await axios.put(
           "http://localhost:3000/api/profile",
           {
@@ -80,16 +53,12 @@ function Dashboard() {
             password: user.password,
             area_interes: user.area_interes,
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Luego actualizamos la foto si hay una seleccionada
         if (selectedFile) {
           const formData = new FormData();
           formData.append("profile_image", selectedFile);
-
           const pictureResponse = await axios.put(
             "http://localhost:3000/api/profile/picture",
             formData,
@@ -100,16 +69,13 @@ function Dashboard() {
               },
             }
           );
-
-          // Forzar una actualización completa del estado
-          setUser((prev) => ({
+          setUser(prev => ({
             ...prev,
             foto_perfil: pictureResponse.data.filename,
-            password: "", // Limpiar contraseña
+            password: "",
           }));
         }
 
-        // Recargar los datos del servidor para asegurar consistencia
         const refreshed = await axios.get("http://localhost:3000/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -123,9 +89,7 @@ function Dashboard() {
           password: "",
         });
 
-        alert(
-          selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado"
-        );
+        alert(selectedFile ? "Perfil y foto actualizados" : "Perfil actualizado");
         setSelectedFile(null);
       } catch (error) {
         console.error("Error:", error);
@@ -145,46 +109,98 @@ function Dashboard() {
     navigate("/");
   };
 
-  // Foto de perfil
-  const [selectedFile, setSelectedFile] = useState(null);
-
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // Validación básica del tipo de archivo
       if (!file.type.match("image.*")) {
         alert("Por favor selecciona un archivo de imagen válido");
         return;
       }
-      // Validación de tamaño (ejemplo: máximo 2MB)
       if (file.size > 2 * 1024 * 1024) {
         alert("La imagen no debe exceder los 2MB");
         return;
       }
       setSelectedFile(file);
 
-      // Vista previa inmediata (opcional)
       const reader = new FileReader();
       reader.onload = (event) => {
-        setUser((prev) => ({ ...prev, foto_perfil: event.target.result }));
+        setUser(prev => ({ ...prev, foto_perfil: event.target.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Sidebar Diseño
-    useEffect(() => {
-      const isMobile = window.innerWidth <= 768;
-      if (sidebarCollapsed && isMobile) {
-        document.body.classList.remove("sidebar-open");
-      } else if (!sidebarCollapsed && isMobile) {
-        document.body.classList.add("sidebar-open");
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+      return;
+    }
+  }, [token, navigate]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let foto_perfil = response.data.foto_perfil;
+        if (foto_perfil && foto_perfil.includes("/")) {
+          foto_perfil = foto_perfil.split("/").pop();
+        }
+
+        setUser({
+          nombre_completo: response.data.nombre_completo,
+          correo: response.data.correo,
+          nombre_rol: response.data.nombre_rol,
+          area_interes: response.data.area_interes || "",
+          foto_perfil: foto_perfil || "",
+          password: "",
+        });
+      } catch (error) {
+        console.error("Error al cargar perfil:", error);
+        navigate("/");
       }
-    }, [sidebarCollapsed]);
+    };
+
+    if (token) loadProfile();
+  }, [token, navigate]);
+
+  useEffect(() => {
+    const loadEstadisticas = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/general/estadisticas",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setEstadisticas(response.data);
+      } catch (error) {
+        console.error("Error al cargar estadísticas:", error);
+      }
+    };
+
+    if (token && user.nombre_rol) {
+      loadEstadisticas();
+    }
+  }, [token, activeSection, user.nombre_rol]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 767;
+      if (isMobile) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">
-      {/* Navbar */}
+      <LandbotWidget />
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
         <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
           ☰
@@ -198,12 +214,8 @@ function Dashboard() {
             <img
               src={
                 user.foto_perfil
-                  ? `http://localhost:3000/uploads/${
-                      user.foto_perfil
-                    }?t=${Date.now()}`
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user.nombre_completo || "U"
-                    )}&background=random&rounded=true&size=40`
+                  ? `http://localhost:3000/uploads/${user.foto_perfil}?t=${Date.now()}`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || "U")}&background=random&rounded=true&size=40`
               }
               alt="avatar"
               className="rounded-circle border"
@@ -224,40 +236,20 @@ function Dashboard() {
         </div>
       </nav>
       <div className="d-flex flex-grow-1">
-        {/* Sidebar */}
         <div
-          className={`bg-dark text-white sidebar shadow-sm ${
-            sidebarCollapsed ? "collapsed" : ""
-          }`}
+          className={`bg-dark text-white sidebar shadow-sm ${sidebarCollapsed ? "collapsed" : ""}`}
           style={{ minWidth: "220px", transition: "all 0.3s" }}
         >
           <h5 className="text-center py-3 border-bottom border-secondary text-white">
-            <i
-              className="bi bi-folder2-open me-2"
-              style={{ fontSize: "1.2rem" }}
-            ></i>
+            <i className="bi bi-folder2-open me-2" style={{ fontSize: "1.2rem" }}></i>
             Menú
           </h5>
           <ul className="nav flex-column px-3">
             {[
-              {
-                icon: "bi-house-door",
-                label: "Inicio",
-                section: "welcome",
-                color: "#FFC107",
-              }, // amarillo
-              {
-                icon: "bi-share-fill",
-                label: "Recursos Compartidos",
-                section: "shared",
-                color: "#6F42C1",
-              }, // morado
-              {
-                icon: "bi-person",
-                label: "Perfil",
-                section: "profile",
-                color: "#FD7E14",
-              }, // naranja
+              { icon: "bi-house-door", label: "Inicio", section: "welcome", color: "#FFC107" },
+              { icon: "bi-people-fill", label: "Gestión de Usuarios", section: "users", color: "#0DCAF0" },
+              { icon: "bi-share-fill", label: "Recursos Compartidos", section: "shared", color: "#6F42C1" },
+              { icon: "bi-person", label: "Perfil", section: "profile", color: "#FD7E14" },
             ].map((item) => (
               <li key={item.section} className="nav-item my-1">
                 <a
@@ -266,142 +258,104 @@ function Dashboard() {
                   className="nav-link text-white px-2 d-flex align-items-center gap-2"
                   style={{ transition: "0.2s", borderRadius: "5px" }}
                 >
-                  <i
-                    className={`bi ${item.icon}`}
-                    style={{ color: item.color }}
-                  ></i>
+                  <i className={`bi ${item.icon}`} style={{ color: item.color }}></i>
                   {item.label}
                 </a>
               </li>
             ))}
             <hr className="border-secondary my-2" />
             <li className="nav-item px-0">
-              <a
-                href="https://tubiblioteca.utp.edu.pe"
-                className="nav-link text-white d-flex align-items-center gap-2"
-              >
+              <a href="https://tubiblioteca.utp.edu.pe" className="nav-link text-white d-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer">
                 <i className="bi bi-book" style={{ color: "#0DCAF0" }}></i>
                 UTP+biblio
               </a>
             </li>
             <li className="nav-item px-0">
-              <a
-                href="#"
-                className="nav-link text-white d-flex align-items-center gap-2"
-              >
-                <i
-                  className="bi bi-question-circle"
-                  style={{ color: "#DC3545" }}
-                ></i>
+              <a href="#" className="nav-link text-white d-flex align-items-center gap-2">
+                <i className="bi bi-question-circle" style={{ color: "#DC3545" }}></i>
                 Ayuda
               </a>
             </li>
           </ul>
         </div>
-        {/* Main Content */}
         <div className="flex-grow-1 p-4 bg-light">
           {activeSection === "welcome" && (
-            <div className="text-center mt-5">
-              <h2
-                className="fw-bold text-center"
-                style={{
-                  color: "#1B1F3B",
-                  fontSize: "2rem",
-                  borderBottom: "3px solid #1B1F3B",
-                  display: "inline-block",
-                  paddingBottom: "8px",
-                }}
-              >
-                ¡Bienvenido, {user.nombre_rol}!
-              </h2>
-              <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+            <div>
+              <div className="text-center mt-3">
+                <h2 className="fw-bold text-center" style={{ color: "#1B1F3B", fontSize: "2rem", borderBottom: "3px solid #1B1F3B", display: "inline-block", paddingBottom: "8px" }}>
+                  ¡Bienvenido, {user.nombre_rol}!
+                </h2>
+                <p className="text-muted mt-2">Nos alegra tenerte de vuelta.</p>
+              </div>
+
+              <Row className="mt-4 g-4">
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-people fs-1 text-primary"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Usuarios Registrados</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.usuariosRegistrados}
+                      </Card.Text>
+                      <small className="text-muted">Cantidad Total de Usuarios</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0 rounded-3">
+                    <Card.Body className="text-center">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <i className="bi bi-download fs-1 text-success"></i>
+                      </div>
+                      <Card.Title className="fw-bold">Descargas Realizadas</Card.Title>
+                      <Card.Text className="display-4 fw-bold text-dark">
+                        {estadisticas.descargasHechas}
+                      </Card.Text>
+                      <small className="text-muted">Total de descargas realizadas</small>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </div>
           )}
           {activeSection === "profile" && (
             <div className="container mt-5">
               <h2 className="mb-4 text-center fw-bold text-dark">
-                <i
-                  className="bi bi-person-circle me-2"
-                  style={{ fontSize: "2rem" }}
-                ></i>
+                <i className="bi bi-person-circle me-2" style={{ fontSize: "2rem" }}></i>
                 Perfil de Usuario
               </h2>
-              <div
-                className="card mx-auto shadow-sm rounded-4"
-                style={{ maxWidth: "600px" }}
-              >
+              <div className="card mx-auto shadow-sm rounded-4" style={{ maxWidth: "600px" }}>
                 <div className="card-body">
                   <form>
-                    {/* campos del perfil */}
                     <div className="mb-3">
                       <label className="form-label">Foto de perfil</label>
-                      <input
-                        type="file"
-                        className="form-control"
-                        onChange={handleFileChange}
-                        disabled={!isEditing}
-                      />
+                      <input type="file" className="form-control" onChange={handleFileChange} disabled={!isEditing} />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nombre</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="nombre_completo"
-                        value={user.nombre_completo}
-                        onChange={handleChange}
-                        readOnly={!isEditing}
-                      />
+                      <input type="text" className="form-control" name="nombre_completo" value={user.nombre_completo} onChange={handleChange} readOnly={!isEditing} />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Correo</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        name="correo"
-                        value={user.correo}
-                        onChange={handleChange}
-                        readOnly={!isEditing}
-                      />
+                      <input type="email" className="form-control" name="correo" value={user.correo} onChange={handleChange} readOnly={!isEditing} />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Nueva contraseña</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        name="password"
-                        value={user.password}
-                        onChange={handleChange}
-                        placeholder="Escribe una nueva contraseña si deseas cambiarla"
-                        disabled={!isEditing}
-                      />
+                      <input type="password" className="form-control" name="password" value={user.password} onChange={handleChange} placeholder="Escribe una nueva contraseña si deseas cambiarla" disabled={!isEditing} />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Rol (no editable)</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={user.nombre_rol}
-                        readOnly
-                      />
+                      <input type="text" className="form-control" value={user.nombre_rol} readOnly />
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Área de interés</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="area_interes"
-                        value={user.area_interes}
-                        onChange={handleChange}
-                        readOnly={!isEditing}
-                      />
+                      <input type="text" className="form-control" name="area_interes" value={user.area_interes} onChange={handleChange} readOnly={!isEditing} />
                     </div>
                     <div className="text-center">
-                      <button
-                        type="button"
-                        className="btn btn-dark px-4 py-2 rounded-3"
-                        onClick={handleEdit}
-                      >
+                      <button type="button" className="btn btn-dark px-4 py-2 rounded-3" onClick={handleEdit}>
                         {isEditing ? "Guardar Cambios" : "Editar Perfil"}
                       </button>
                     </div>
@@ -410,12 +364,10 @@ function Dashboard() {
               </div>
             </div>
           )}
-          {activeSection === "shared" && userId && (
-            <SharedResouces userId={userId} />
-          )}
+          {activeSection === "users" && <UserManagement />}
+          {activeSection === "shared" && <SharedResources />}
         </div>
       </div>
-      {/* Estilo sidebar colapsado */}
       <style>{`
         .sidebar.collapsed {
           margin-left: -220px;

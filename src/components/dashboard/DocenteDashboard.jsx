@@ -3,13 +3,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./Dashboard.css";
 import ResourceList from "../docente/ResourceList";
 import ResourceUpload from "../docente/ResourceUpload";
 import SharedResources from "../docente/SharedResources";
 import { Card, Row, Col } from 'react-bootstrap';
-
-import "./Dashboard.css";
+import LandbotWidget from './LandbotWidget';
+import '../../styles/Dashboard.css';
 
 function Dashboard() {
   // 1. Hooks de React (useNavigate, etc.)
@@ -204,7 +203,7 @@ function Dashboard() {
     const loadEstadisticas = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/docente/estadisticas",
+          "http://localhost:3000/api/general/estadisticas",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEstadisticas(response.data);
@@ -232,6 +231,7 @@ function Dashboard() {
 
   return (
     <div className="container-fluid p-0 d-flex flex-column vh-100">
+      <LandbotWidget />
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4 py-2">
         <button className="btn btn-outline-dark me-3" onClick={toggleSidebar}>
@@ -339,6 +339,8 @@ function Dashboard() {
               <a
                 href="https://tubiblioteca.utp.edu.pe"
                 className="nav-link text-white d-flex align-items-center gap-2"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <i className="bi bi-book" style={{ color: "#0DCAF0" }}></i>
                 UTP+biblio

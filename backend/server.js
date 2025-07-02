@@ -33,9 +33,11 @@ app.use('/uploads', (req, res, next) => {
 // Rutas
 const authRoutes = require('./routes/authRoutes');
 const docenteRoutes = require('./routes/docenteRoutes');
+const sharedRoutes = require('./routes/sharedRoutes');
 
 app.use('/api', authRoutes);
 app.use('/api/docente', docenteRoutes);
+app.use('/api/general', sharedRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 3000;

@@ -5,13 +5,14 @@ import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
-import "./ResourceTables.css";
+import '../../styles/ResourceTables.css';
 
 const ResourceList = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
-
+  const [filterField, setFilterField] = useState('titulo');
+  const [filterText, setFilterText] = useState('');
+  const [filteredResources, setFilteredResources] = useState([]);
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,9 +43,9 @@ const ResourceList = () => {
         ]);
 
         setResources(resourcesRes.data);
-        setCourses(datosUtilesRes.data.cursos);     // ← asegúrate que el backend devuelve esto
+        setCourses(datosUtilesRes.data.cursos);
         setCategories(datosUtilesRes.data.categorias);
-
+        setFilteredResources(resourcesRes.data); // Mostrar todos al inicio
       } catch (err) {
         console.error('Error al cargar datos:', err);
         setError('Error al cargar los datos');
@@ -55,6 +56,15 @@ const ResourceList = () => {
 
     fetchData();
   }, [token]);
+
+  const applyFilter = () => {
+    const text = filterText.toLowerCase();
+    const newFiltered = resources.filter(resource => {
+      const fieldValue = (resource[filterField] ?? '').toString().toLowerCase();
+      return fieldValue.includes(text);
+    });
+    setFilteredResources(newFiltered);
+  };
 
   const handleDelete = (resourceId) => {
     confirmAlert({
@@ -155,6 +165,40 @@ const ResourceList = () => {
         <i className="bi bi-archive me-2"></i> 
         Mis Recursos
       </h2>
+
+      {/* Filtros */}
+      <div className="row mb-3">
+        <div className="col-md-3">
+          <select
+            className="form-select"
+            value={filterField}
+            onChange={(e) => setFilterField(e.target.value)}
+          >
+            <option value="titulo">Título</option>
+            <option value="descripcion">Descripción</option>
+            <option value="nombre_curso">Curso</option>
+            <option value="nombre_categoria">Categoría</option>
+            <option value="tipo_archivo">Tipo</option>
+          </select>
+        </div>
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control"
+            placeholder={`Buscar por ${filterField}`}
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+        </div>
+        <div className="col-md-3">
+          <button
+            className="btn btn-primary w-100"
+            onClick={applyFilter}
+          >
+            Filtrar
+          </button>
+        </div>
+      </div>
       
       {resources.length === 0 ? (
         <div className="alert alert-info">No has subido ningún recurso aún.</div>
@@ -173,7 +217,7 @@ const ResourceList = () => {
              </tr>
             </thead>
             <tbody>
-              {resources.map(resource => (
+              {filteredResources.map(resource => (
                 <tr key={resource.id_recurso}>
                   <td data-label="Título">
                     {editingId === resource.id_recurso ? (
