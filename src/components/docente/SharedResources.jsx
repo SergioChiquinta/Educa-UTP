@@ -5,8 +5,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Modal, Button } from 'react-bootstrap';
 import { renderAsync } from 'docx-preview';
-import "./ResourceTables.css";
-import "./ResourceModalPreview.css";
+import '../../styles/ResourceTables.css';
+import '../../styles/ResourceModalPreview.css';
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
@@ -240,7 +240,7 @@ const SharedResources = () => {
       {/* Modal para previsualización de Word */}
       <Modal show={showWordModal} onHide={() => setShowWordModal(false)} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>
+          <Modal.Title data-testid="modal-title">
             <i className="bi bi-file-earmark-word me-2"></i>
             {currentWordResource?.titulo}
           </Modal.Title>

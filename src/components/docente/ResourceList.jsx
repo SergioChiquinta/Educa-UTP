@@ -5,8 +5,7 @@ import axios from 'axios';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
-import "./ResourceTables.css";
+import '../../styles/ResourceTables.css';
 
 const ResourceList = () => {
   const [courses, setCourses] = useState([]);
