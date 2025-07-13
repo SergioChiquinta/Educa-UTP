@@ -77,7 +77,7 @@ CREATE TABLE tokens_recuperacion (
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
 );
 
--- Log de actividad para admins
+-- Log de actividad para admins (opcional de aplicar)
 CREATE TABLE log_actividad (
     id_log INT AUTO_INCREMENT PRIMARY KEY,
     id_admin INT NOT NULL,
@@ -85,4 +85,3 @@ CREATE TABLE log_actividad (
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_admin) REFERENCES usuarios(id_usuario)
 );
-

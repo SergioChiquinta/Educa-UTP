@@ -300,7 +300,7 @@ exports.getEstadisticasDocente = async (req, res) => {
     
     // Cantidad de Usuarios Registrados para el Admin
     const [usuariosRegistrados] = await db.promise().query(
-      'SELECT COUNT(*) as total FROM usuarios'
+      'SELECT COUNT(*) as total FROM usuarios WHERE estado = TRUE'
     );
     
     res.json({

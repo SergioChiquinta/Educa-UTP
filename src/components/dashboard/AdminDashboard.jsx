@@ -8,6 +8,7 @@ import UserManagement from "../admin-gestion-usuarios/UserManagement";
 import { Card, Row, Col } from 'react-bootstrap';
 import LandbotWidget from './LandbotWidget';
 import '../../styles/Dashboard.css';
+import '../../styles/ResourceTables.css';
 
 function Dashboard() {
   const navigate = useNavigate();

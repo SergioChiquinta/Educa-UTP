@@ -219,7 +219,7 @@ const ResourceList = () => {
             <tbody>
               {filteredResources.map(resource => (
                 <tr key={resource.id_recurso}>
-                  <td data-label="Título">
+                  <td data-label="Título:">
                     {editingId === resource.id_recurso ? (
                       <input
                         type="text"
@@ -232,7 +232,7 @@ const ResourceList = () => {
                       <span className="d-md-inline">{resource.titulo}</span>
                     )}
                   </td>
-                  <td data-label="Descripción">
+                  <td data-label="Descripción:">
                     {editingId === resource.id_recurso ? (
                       <textarea
                         className="form-control form-control-sm"
@@ -245,7 +245,7 @@ const ResourceList = () => {
                       <span>{resource.descripcion || 'Sin descripción'}</span>
                     )}
                   </td>
-                  <td data-label="Curso">
+                  <td data-label="Curso:">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
@@ -263,7 +263,7 @@ const ResourceList = () => {
                       <span>{resource.nombre_curso}</span>
                     )}
                   </td>
-                  <td data-label="Categoría">
+                  <td data-label="Categoría:">
                     {editingId === resource.id_recurso ? (
                       <select
                         className="form-select form-select-sm"
@@ -281,15 +281,15 @@ const ResourceList = () => {
                       <span>{resource.nombre_categoria}</span>
                     )}
                   </td>
-                  <td data-label="Tipo">
+                  <td data-label="Tipo:">
                     <span className={`badge ${resource.tipo_archivo === 'PDF' ? 'bg-danger' : 'bg-primary'}`}>
                       {resource.tipo_archivo}
                     </span>
                   </td>
-                  <td data-label="Fecha">
+                  <td data-label="Fecha:">
                     <span className="text-nowrap">{formatDate(resource.fecha_subida)}</span>
                   </td>
-                  <td data-label="Acciones">
+                  <td data-label="Acciones:">
                     <div className="d-flex gap-1">
                       {editingId === resource.id_recurso ? (
                         <>

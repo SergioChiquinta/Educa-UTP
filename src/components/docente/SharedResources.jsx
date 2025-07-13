@@ -199,19 +199,19 @@ const SharedResources = () => {
             <tbody>
               {filteredResources.map(resource => (
                 <tr key={resource.id_recurso}>
-                  <td>{resource.titulo}</td>
-                  <td>{resource.descripcion || '-'}</td>
-                  <td>{resource.nombre_curso}</td>
-                  <td>{resource.nombre_categoria}</td>
-                  <td>
+                  <td data-label="Título:">{resource.titulo}</td>
+                  <td data-label="Descripción:">{resource.descripcion || '-'}</td>
+                  <td data-label="Curso:">{resource.nombre_curso}</td>
+                  <td data-label="Categoría:">{resource.nombre_categoria}</td>
+                  <td data-label="Tipo:">
                     <span className={`badge ${
                       resource.tipo_archivo === 'PDF' ? 'bg-danger' : 'bg-primary'
                     }`}>
                       {resource.tipo_archivo}
                     </span>
                   </td>
-                  <td>{formatDate(resource.fecha_subida)}</td>
-                  <td>
+                  <td data-label="Fecha:">{formatDate(resource.fecha_subida)}</td>
+                  <td data-label="Acciones:">
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-sm btn-outline-primary"

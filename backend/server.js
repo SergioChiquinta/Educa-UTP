@@ -34,10 +34,12 @@ app.use('/uploads', (req, res, next) => {
 const authRoutes = require('./routes/authRoutes');
 const docenteRoutes = require('./routes/docenteRoutes');
 const sharedRoutes = require('./routes/sharedRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 app.use('/api', authRoutes);
 app.use('/api/docente', docenteRoutes);
 app.use('/api/general', sharedRoutes);
+app.use('/api', userRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
