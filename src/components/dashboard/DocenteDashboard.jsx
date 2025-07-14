@@ -57,7 +57,7 @@ function Dashboard() {
     if (isEditing) {
       try {
         await axios.put(
-          "http://localhost:3000/api/profile",
+          `${process.env.REACT_APP_API_URL}/profile`,
           {
             nombre_completo: user.nombre_completo,
             correo: user.correo,
@@ -71,7 +71,7 @@ function Dashboard() {
           const formData = new FormData();
           formData.append("profile_image", selectedFile);
           const pictureResponse = await axios.put(
-            "http://localhost:3000/api/profile/picture",
+            `${process.env.REACT_APP_API_URL}/profile/picture`,
             formData,
             {
               headers: {
@@ -87,7 +87,7 @@ function Dashboard() {
           }));
         }
 
-        const refreshed = await axios.get("http://localhost:3000/api/profile", {
+        const refreshed = await axios.get(`${process.env.REACT_APP_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -158,7 +158,7 @@ function Dashboard() {
     const loadInitialData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/docente/datos-utiles",
+          `${process.env.REACT_APP_API_URL}/docente/datos-utiles`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setCourses(response.data.cursos);
@@ -174,7 +174,7 @@ function Dashboard() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/profile", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -204,7 +204,7 @@ function Dashboard() {
     const loadEstadisticas = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/general/estadisticas",
+          `${process.env.REACT_APP_API_URL}/general/estadisticas`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setEstadisticas(response.data);
@@ -247,7 +247,7 @@ function Dashboard() {
             <img
               src={
                 user.foto_perfil
-                  ? `http://localhost:3000/uploads/${
+                  ? `${process.env.REACT_APP_API_URL}/uploads/${
                       user.foto_perfil
                     }?t=${Date.now()}`
                   : `https://ui-avatars.com/api/?name=${encodeURIComponent(

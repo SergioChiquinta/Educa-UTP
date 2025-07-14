@@ -25,7 +25,7 @@ function UserManagement() {
 
   const fetchUsuarios = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/usuarios");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
       setUsuarios(res.data);
       setUsuariosOriginales(res.data);
     } catch (error) {
@@ -72,10 +72,10 @@ function UserManagement() {
 
       if (editingUser) {
         // Editar
-        await axios.put(`http://localhost:3000/api/usuarios/${editingUser.id_usuario}`, formData);
+        await axios.put(`${process.env.REACT_APP_API_URL}/usuarios/${editingUser.id_usuario}`, formData);
       } else {
         // Crear
-        await axios.post("http://localhost:3000/api/usuarios", formData);
+        await axios.post(`${process.env.REACT_APP_API_URL}/usuarios`, formData);
       }
       fetchUsuarios();
       handleCloseModal();
@@ -87,7 +87,7 @@ function UserManagement() {
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/usuarios/${id}`);
+        await axios.delete(`${process.env.REACT_APP_API_URL}/usuarios/${id}`);
         fetchUsuarios();
       } catch (error) {
         console.error("Error al eliminar:", error);

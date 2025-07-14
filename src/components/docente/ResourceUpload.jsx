@@ -58,7 +58,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
       data.append("id_categoria", formData.id_categoria);
 
       const response = await axios.post(
-        "http://localhost:3000/api/docente/subir-recurso",
+        `${process.env.REACT_APP_API_URL}/docente/subir-recurso`,
         data,
         {
           headers: {

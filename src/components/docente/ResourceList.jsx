@@ -34,10 +34,10 @@ const ResourceList = () => {
         setLoading(true);
 
         const [resourcesRes, datosUtilesRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/docente/recursos', {
+          axios.get(`${process.env.REACT_APP_API_URL}/docente/recursos`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:3000/api/docente/datos-utiles', {
+          axios.get(`${process.env.REACT_APP_API_URL}/docente/datos-utiles`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
@@ -75,7 +75,7 @@ const ResourceList = () => {
           label: 'Sí, eliminar',
           onClick: async () => {
             try {
-              await axios.delete(`http://localhost:3000/api/docente/eliminar-recurso/${resourceId}`, {
+              await axios.delete(`${process.env.REACT_APP_API_URL}/docente/eliminar-recurso/${resourceId}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
 
@@ -104,7 +104,7 @@ const ResourceList = () => {
     });
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/docente/recurso/${id}`,
+        `${process.env.REACT_APP_API_URL}/docente/recurso/${id}`,
         {
           titulo: editForm.titulo,
           descripcion: editForm.descripcion,

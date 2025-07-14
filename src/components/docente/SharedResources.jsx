@@ -25,7 +25,7 @@ const SharedResources = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          'http://localhost:3000/api/general/recursos-compartidos',
+          `${process.env.REACT_APP_API_URL}/recursos-compartidos`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
@@ -63,7 +63,7 @@ const SharedResources = () => {
 
   const handlePreview = async (resource) => {
     if (resource.tipo_archivo === 'PDF') {
-      window.open(`http://localhost:3000/uploads/${resource.archivo_url}`, '_blank');
+      window.open(`${process.env.REACT_APP_API_URL}/uploads/${resource.archivo_url}`, '_blank');
     } else if (resource.tipo_archivo === 'DOCX') {
       try {
         setCurrentWordResource(resource);
@@ -71,7 +71,7 @@ const SharedResources = () => {
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const response = await fetch(`http://localhost:3000/uploads/${resource.archivo_url}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/uploads/${resource.archivo_url}`);
         const arrayBuffer = await response.arrayBuffer();
 
         previewContainerRef.current.innerHTML = '';
@@ -101,12 +101,12 @@ const SharedResources = () => {
   const handleDownload = async (resource) => {
     try {
       await axios.post(
-        'http://localhost:3000/api/general/registrar-descarga',
+        `${process.env.REACT_APP_API_URL}/general/registrar-descarga`,
         { id_recurso: resource.id_recurso },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const fileUrl = `http://localhost:3000/uploads/${resource.archivo_url}?download=true`;
+      const fileUrl = `${process.env.REACT_APP_API_URL}/${resource.archivo_url}?download=true`;
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;

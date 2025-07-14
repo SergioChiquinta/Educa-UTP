@@ -18,7 +18,7 @@ function FormLogin() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/login', { correo, password });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { correo, password });
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
@@ -55,7 +55,7 @@ function FormLogin() {
     }
 
     try {
-      await axios.post('http://localhost:3000/api/reset-password', { correo: resetEmail });
+      await axios.post(`${process.env.REACT_APP_API_URL}/reset-password`, { correo: resetEmail });
       toast.success('Si el correo está registrado, recibirás instrucciones.');
       setShowResetPassword(false);
       setResetEmail('');
