@@ -46,6 +46,7 @@ exports.subirRecurso = async (req, res) => {
     console.log('Iniciando subida de recurso...');
     console.log('Cuerpo de la solicitud:', req.body);
     console.log('Archivo recibido:', req.file);
+    console.log('file.mimetype:', req.file?.mimetype);
 
     const docenteId = req.user.id;
     const { titulo, descripcion, id_curso, id_categoria } = req.body;
@@ -57,7 +58,9 @@ exports.subirRecurso = async (req, res) => {
 
     const allowedTypes = [
       'application/pdf',
+      'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-word.document.macroEnabled.12',
       'application/octet-stream'
     ];
     if (!allowedTypes.includes(req.file.mimetype)) {
