@@ -13,8 +13,8 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: 'recursos',
-      public_id: `${Date.now()}-${file.originalname}`, // <-- mantenemos extensión
-      resource_type: 'raw',
+      public_id: `${Date.now()}-${file.originalname}`,
+      resource_type: file.mimetype === 'application/pdf' ? 'image' : 'raw',
       type: 'upload',
       access_mode: 'public',
     };
