@@ -25,7 +25,7 @@ const SharedResources = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/recursos-compartidos`,
+          `${process.env.REACT_APP_API_URL}/general/recursos-compartidos`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }

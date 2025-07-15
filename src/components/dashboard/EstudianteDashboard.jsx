@@ -139,10 +139,7 @@ function Dashboard() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        let foto_perfil = response.data.foto_perfil;
-        if (foto_perfil && foto_perfil.includes("/")) {
-          foto_perfil = foto_perfil.split("/").pop();
-        }
+        let foto_perfil = response.data.foto_perfil || "";
 
         setUser({
           nombre_completo: response.data.nombre_completo,
@@ -208,12 +205,8 @@ function Dashboard() {
             <img
               src={
                 user.foto_perfil
-                  ? `${process.env.REACT_APP_API_URL}/uploads/${
-                      user.foto_perfil
-                    }?t=${Date.now()}`
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user.nombre_completo || "U"
-                    )}&background=random&rounded=true&size=40`
+                  ? `${process.env.REACT_APP_API_URL}/uploads/${user.foto_perfil}?t=${Date.now()}`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || "U")}&background=random&rounded=true&size=40`
               }
               alt="avatar"
               className="rounded-circle border"
