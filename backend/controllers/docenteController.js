@@ -43,53 +43,50 @@ exports.getRecursosDocente = async (req, res) => {
 // Modifica la función subirRecurso en docenteController.js
 exports.subirRecurso = async (req, res) => {
   try {
-    console.log('Iniciando subida de recurso...'); // Log de depuración
-    console.log('Cuerpo de la solicitud:', req.body); // Ver qué datos llegan
-    console.log('Archivo recibido:', req.file); // Ver el archivo recibido
+    console.log('Iniciando subida de recurso...');
+    console.log('Cuerpo de la solicitud:', req.body);
+    console.log('Archivo recibido:', req.file);
 
     const docenteId = req.user.id;
     const { titulo, descripcion, id_curso, id_categoria } = req.body;
-    
+
     if (!req.file) {
       console.error('No se recibió archivo');
       return res.status(400).json({ message: 'Debes subir un archivo' });
     }
-    
-    // Validar tipos de archivo permitidos
+
     const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(req.file.mimetype)) {
       console.error('Tipo de archivo no permitido:', req.file.mimetype);
       return res.status(400).json({ message: 'Solo se permiten archivos PDF o DOCX' });
     }
-    
+
     const tipoArchivo = req.file.mimetype === 'application/pdf' ? 'PDF' : 'DOCX';
-    
+
     const query = `
       INSERT INTO recursos 
       (titulo, descripcion, archivo_url, tipo_archivo, id_docente, id_curso, id_categoria)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    
-    console.log('Ejecutando query con:', [titulo, descripcion, req.file.path, tipoArchivo, docenteId, id_curso, id_categoria]);
-    
-    await db.promise().query(query, [
+
+    // Aquí definimos result correctamente
+    const [result] = await db.promise().query(query, [
       titulo,
       descripcion,
-      req.file.path, // Solo la URL final pública de Cloudinary
+      req.file.path,
       tipoArchivo,
       docenteId,
       id_curso,
       id_categoria
     ]);
-    
-    // Agregar al docente como autor
+
     await db.promise().query(
       'INSERT INTO autores_recursos (id_recurso, id_autor) VALUES (?, ?)',
       [result.insertId, docenteId]
     );
-    
+
     console.log('Recurso subido exitosamente con ID:', result.insertId);
-    
+
     res.status(201).json({ 
       message: 'Recurso subido exitosamente',
       id_recurso: result.insertId
