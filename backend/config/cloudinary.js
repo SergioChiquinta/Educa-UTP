@@ -15,11 +15,13 @@ const storage = new CloudinaryStorage({
     if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       ext = 'docx';
     }
+
     return {
       folder: 'recursos',
       format: ext,
       public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
       resource_type: 'raw',
+      type: 'upload' // Esto hace el archivo público y solucionará el error 401
     };
   },
 });

@@ -55,7 +55,11 @@ exports.subirRecurso = async (req, res) => {
       return res.status(400).json({ message: 'Debes subir un archivo' });
     }
 
-    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/octet-stream'
+    ];
     if (!allowedTypes.includes(req.file.mimetype)) {
       console.error('Tipo de archivo no permitido:', req.file.mimetype);
       return res.status(400).json({ message: 'Solo se permiten archivos PDF o DOCX' });
