@@ -18,8 +18,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
 
 // Configuración de archivos estáticos con middleware personalizado
 // app.use('/uploads', (req, res, next) => {
