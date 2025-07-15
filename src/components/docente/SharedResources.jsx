@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button } from 'react-bootstrap';
 import { renderAsync } from 'docx-preview';
 import '../../styles/ResourceTables.css';
@@ -63,7 +64,8 @@ const SharedResources = () => {
 
   const handlePreview = async (resource) => {
     if (resource.tipo_archivo === 'PDF') {
-      window.open(resource.archivo_url, '_blank');
+      const previewUrl = `${process.env.REACT_APP_API_URL}/view-pdf/${resource.id_recurso}`;
+      window.open(previewUrl, '_blank');
     } else if (resource.tipo_archivo === 'DOCX') {
       try {
         setCurrentWordResource(resource);
@@ -109,18 +111,10 @@ const SharedResources = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Agregar fl_attachment para forzar descarga
-      const fileUrl = resource.archivo_url + '?fl_attachment=true';
+      const fileUrl = `${process.env.REACT_APP_API_URL}/download/${resource.id_recurso}`;
 
-      const link = document.createElement('a');
-      link.href = fileUrl;
-
-      // Si quieres que se nombre correctamente al descargar
-      link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Abrir en misma ventana
+      window.location.href = fileUrl;
 
       toast.success('Descarga iniciada');
     } catch (err) {
