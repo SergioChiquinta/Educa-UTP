@@ -6,7 +6,6 @@ const fs = require('fs');
 
 // Configuración de Multer para recursos académicos
 const { storage } = require('../config/cloudinary');
-const multer = require('multer');
 
 const uploadRecurso = multer({ 
   storage: storage,
