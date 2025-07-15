@@ -96,7 +96,7 @@ function Dashboard() {
           correo: refreshed.data.correo,
           nombre_rol: refreshed.data.nombre_rol,
           area_interes: refreshed.data.area_interes || "",
-          foto_perfil: refreshed.data.foto_perfil?.split("/").pop() || "",
+          foto_perfil: refreshed.data.foto_perfil || "",
           password: "",
         });
 
@@ -244,7 +244,7 @@ function Dashboard() {
             <img
               src={
                 user.foto_perfil
-                  ? `${process.env.REACT_APP_API_FILES_URL}/uploads/${user.foto_perfil}?t=${Date.now()}`
+                  ? `${user.foto_perfil}?t=${Date.now()}`
                   : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || "U")}&background=random&rounded=true&size=40`
               }
               alt="avatar"
