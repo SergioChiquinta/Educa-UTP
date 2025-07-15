@@ -1,7 +1,6 @@
 
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const path = require('path');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,12 +11,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
-    const ext = path.extname(file.originalname);
-    const baseName = path.basename(file.originalname, ext);
-
     return {
       folder: 'recursos',
-      public_id: `${Date.now()}-${baseName}`, // ✅ sin extensión repetida
+      public_id: `${Date.now()}-${file.originalname}`,
       resource_type: 'raw',
       type: 'upload',
       access_mode: 'public',
