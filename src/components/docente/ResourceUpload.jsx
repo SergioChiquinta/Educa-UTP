@@ -187,7 +187,7 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
                   type="file"
                   className="form-control"
                   onChange={handleFileChange}
-                  accept=".pdf,.docx"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   required
                 />
                 <small className="text-muted d-block mt-2">

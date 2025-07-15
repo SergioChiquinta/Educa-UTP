@@ -56,19 +56,15 @@ exports.subirRecurso = async (req, res) => {
       return res.status(400).json({ message: 'Debes subir un archivo' });
     }
 
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-word.document.macroEnabled.12',
-      'application/octet-stream'
-    ];
-    if (!allowedTypes.includes(req.file.mimetype)) {
-      console.error('Tipo de archivo no permitido:', req.file.mimetype);
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const allowedExtensions = ['.pdf', '.docx'];
+
+    if (!allowedExtensions.includes(ext)) {
+      console.error('Extensión no permitida:', ext);
       return res.status(400).json({ message: 'Solo se permiten archivos PDF o DOCX' });
     }
 
-    const tipoArchivo = req.file.mimetype === 'application/pdf' ? 'PDF' : 'DOCX';
+    const tipoArchivo = ext === '.pdf' ? 'PDF' : 'DOCX';
 
     const query = `
       INSERT INTO recursos 
@@ -76,11 +72,13 @@ exports.subirRecurso = async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
+    const archivoUrl = req.file.secure_url || req.file.path;
+    
     // Aquí definimos result correctamente
     const [result] = await db.promise().query(query, [
       titulo,
       descripcion,
-      req.file.path,
+      archivoUrl,
       tipoArchivo,
       docenteId,
       id_curso,
