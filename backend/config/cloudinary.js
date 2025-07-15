@@ -14,7 +14,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: 'recursos', // Quitar format: ext,
       public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
-      resource_type: 'auto', // Esto ya se encarga
+      resource_type: 'raw',
       type: 'upload',
       access_mode: 'public',
     };

@@ -97,7 +97,7 @@ exports.subirRecurso = async (req, res) => {
       id_recurso: result.insertId
     });
   } catch (error) {
-    console.error('Error detallado al subir recurso:', error);
+    console.error('Error detallado al subir recurso:', error.message, error.stack);
     res.status(500).json({ 
       message: 'Error al subir recurso',
       error: error.message,
