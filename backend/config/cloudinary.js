@@ -12,8 +12,8 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     return {
-      folder: 'recursos', // Quitar format: ext,
-      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      folder: 'recursos',
+      public_id: `${Date.now()}-${file.originalname}`, // <-- mantenemos extensión
       resource_type: 'raw',
       type: 'upload',
       access_mode: 'public',

@@ -79,17 +79,29 @@ const ResourceList = () => {
                 headers: { Authorization: `Bearer ${token}` }
               });
 
-              setResources(prev => prev.filter(resource => resource.id_recurso !== resourceId));
+              setResources(prev => {
+                const updated = prev.filter(resource => resource.id_recurso !== resourceId);
+
+                // Reaplicar el filtro
+                const text = filterText.toLowerCase();
+                const newFiltered = updated.filter(resource => {
+                  const fieldValue = (resource[filterField] ?? '').toString().toLowerCase();
+                  return fieldValue.includes(text);
+                });
+                setFilteredResources(newFiltered);
+
+                return updated;
+              });
+
               setEditingId(null);
             } catch (err) {
-              console.error('Error al editar recurso:', err);
-              setError('No se pudo actualizar el recurso');
+              console.error('Error al eliminar recurso:', err);
+              setError('No se pudo eliminar el recurso');
             }
           }
         },
         {
           label: 'Cancelar'
-          // No se hace nada, solo cierra
         }
       ]
     });
