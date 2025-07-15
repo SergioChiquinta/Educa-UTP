@@ -11,10 +11,10 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'recursos',   // Carpeta en Cloudinary
+    folder: 'recursos',
     allowed_formats: ['pdf', 'docx'],
-    resource_type: 'raw', // Para archivos binarios (PDF, DOCX)
-    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`
+    resource_type: 'raw',
+    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
   },
 });
 

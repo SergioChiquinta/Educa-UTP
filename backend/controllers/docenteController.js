@@ -70,12 +70,12 @@ exports.subirRecurso = async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     
-    console.log('Ejecutando query con:', [titulo, descripcion, `recursos/${req.file.filename}`, tipoArchivo, docenteId, id_curso, id_categoria]);
+    console.log('Ejecutando query con:', [titulo, descripcion, req.file.path, tipoArchivo, docenteId, id_curso, id_categoria]);
     
-    const [result] = await db.promise().query(query, [
+    await db.promise().query(query, [
       titulo,
       descripcion,
-      req.file.path, // Aquí cambias,
+      req.file.path, // Solo la URL final pública de Cloudinary
       tipoArchivo,
       docenteId,
       id_curso,
@@ -184,6 +184,13 @@ exports.eliminarRecurso = async (req, res) => {
     }
     
     // Eliminar (ON DELETE CASCADE se encargará de autores_recursos)
+    // Eliminar descargas asociadas
+    await db.promise().query(
+      'DELETE FROM estadisticas_descarga WHERE id_recurso = ?',
+      [id_recurso]
+    );
+
+    // Ahora eliminar recurso
     await db.promise().query(
       'DELETE FROM recursos WHERE id_recurso = ?',
       [id_recurso]

@@ -4,15 +4,8 @@ const jwt = require('jsonwebtoken');
 const db = require('../models/db');
 const multer = require('multer');
 const path = require('path');
-const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
-
-// === Config Cloudinary ===
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const { cloudinary } = require('../config/cloudinary');
 
 // === LOGIN ===
 exports.login = async (req, res) => {
@@ -91,12 +84,7 @@ exports.getProfile = (req, res) => {
       if (err) return res.status(500).json({ message: 'Error de servidor' });
       if (results.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-      const userData = results[0];
-      if (userData.foto_perfil) {
-        userData.foto_perfil = userData.foto_perfil;
-      }
-      
-      res.json(userData);
+      res.json(results[0]);
     });
   });
 };
@@ -154,21 +142,12 @@ exports.resetPassword = (req, res) => {
   });
 };
 
-// === MULTER PARA FOTO PERFIL TEMPORAL ===
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'temp/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// === MULTER CON MEMORY STORAGE ===
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 exports.upload = upload;
 
-// === UPDATE PROFILE PICTURE CLOUDINARY ===
+// === UPDATE PROFILE PICTURE (Cloudinary) ===
 exports.updateProfilePicture = async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
@@ -181,16 +160,22 @@ exports.updateProfilePicture = async (req, res) => {
     }
 
     try {
-      // Subir a Cloudinary
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'perfil_usuarios',
-        width: 300,
-        height: 300,
-        crop: 'fill'
+      // Subir a Cloudinary desde buffer
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'perfil_usuarios',
+            width: 300,
+            height: 300,
+            crop: 'fill',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
       });
-
-      // Limpiar archivo temporal
-      fs.unlinkSync(req.file.path);
 
       const imageUrl = result.secure_url;
       const userId = decoded.id;
