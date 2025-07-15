@@ -5,42 +5,15 @@ const path = require('path');
 const fs = require('fs');
 
 // Configuración de Multer para recursos académicos
-const storageRecursos = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.resolve(__dirname, '..', 'uploads', 'recursos');
-    console.log('Ruta absoluta donde se guardará:', uploadDir);
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const { storage } = require('../config/cloudinary');
+const multer = require('multer');
 
 const uploadRecurso = multer({ 
-  storage: storageRecursos,
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      'application/pdf', 
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword' // Añadir soporte para DOC antiguo
-    ];
-    
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Solo se permiten archivos PDF o DOCX'), false);
-    }
-  },
+  storage: storage,
   limits: { 
-    fileSize: 25 * 1024 * 1024, // Aumentado a 25MB para margen
+    fileSize: 25 * 1024 * 1024,
     files: 1,
-    parts: 10 // Limitar partes del formulario
+    parts: 10
   }
 });
 
@@ -103,7 +76,7 @@ exports.subirRecurso = async (req, res) => {
     const [result] = await db.promise().query(query, [
       titulo,
       descripcion,
-      `recursos/${req.file.filename}`,
+      req.file.path, // Aquí cambias,
       tipoArchivo,
       docenteId,
       id_curso,

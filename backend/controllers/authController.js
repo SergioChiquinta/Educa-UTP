@@ -2,9 +2,19 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models/db');
+const multer = require('multer');
+const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+
+// === Config Cloudinary ===
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // === LOGIN ===
-// Función mejorada de login
 exports.login = async (req, res) => {
   try {
     const { correo, password } = req.body;
@@ -18,7 +28,7 @@ exports.login = async (req, res) => {
     `;
 
     const [users] = await db.promise().query(query, [correo]);
-    
+
     if (users.length === 0) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
@@ -49,7 +59,7 @@ exports.login = async (req, res) => {
         nombre: user.nombre_completo,
         correo: user.correo,
         rol: user.nombre_rol,
-        foto_perfil: user.foto_perfil ? `${process.env.BASE_URL}/uploads/${user.foto_perfil}` : null,
+        foto_perfil: user.foto_perfil ? user.foto_perfil : null,
         area_interes: user.area_interes
       }
     });
@@ -59,7 +69,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// Función para obtener perfil
+// === GET PROFILE ===
 exports.getProfile = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
@@ -82,9 +92,8 @@ exports.getProfile = (req, res) => {
       if (results.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
 
       const userData = results[0];
-      // Asegúrate de incluir la URL completa de la imagen si existe
       if (userData.foto_perfil) {
-        userData.foto_perfil = `${process.env.BASE_URL}/uploads/${userData.foto_perfil}`;
+        userData.foto_perfil = userData.foto_perfil;
       }
       
       res.json(userData);
@@ -92,7 +101,7 @@ exports.getProfile = (req, res) => {
   });
 };
 
-// Función para actualizar perfil
+// === UPDATE PROFILE ===
 exports.updateProfile = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
@@ -121,15 +130,11 @@ exports.updateProfile = (req, res) => {
         );
       });
     } else {
-      // En authController.js, modifica updateProfile:
       db.query(
         'UPDATE usuarios SET nombre_completo = ?, correo = ?, area_interes = ? WHERE id_usuario = ?',
         [nombre_completo, correo, area_interes, userId],
         (err) => {
-          if (err) {
-            console.error('Error SQL:', err);
-            return res.status(500).json({ message: 'Error al actualizar el perfil' });
-          }
+          if (err) return res.status(500).json({ message: 'Error al actualizar el perfil' });
           res.json({ message: 'Perfil actualizado exitosamente' });
         }
       );
@@ -137,7 +142,7 @@ exports.updateProfile = (req, res) => {
   });
 };
 
-// Función para resetear contraseña (simulado)
+// === RESET PASSWORD SIMULADO ===
 exports.resetPassword = (req, res) => {
   const { correo } = req.body;
 
@@ -149,48 +154,62 @@ exports.resetPassword = (req, res) => {
   });
 };
 
-// Funcion para editar foto de perfil
-const multer = require('multer');
-const path = require('path');
-
-// Configuración de Multer
+// === MULTER PARA FOTO PERFIL TEMPORAL ===
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // carpeta donde guardarás las imágenes
+    cb(null, 'temp/');
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // nombre único
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 const upload = multer({ storage: storage });
-exports.upload = upload; // exportar para usar en las rutas
+exports.upload = upload;
 
-exports.updateProfilePicture = (req, res) => {
+// === UPDATE PROFILE PICTURE CLOUDINARY ===
+exports.updateProfilePicture = async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) return res.status(403).json({ message: 'Token inválido' });
 
     if (!req.file) {
       return res.status(400).json({ message: 'No se recibió ninguna imagen' });
     }
-    const userId = decoded.id;
-    const profileImage = req.file.filename;
 
-    db.query(
-      'UPDATE usuarios SET foto_perfil = ? WHERE id_usuario = ?',
-      [profileImage, userId],
-      (err) => {
-        if (err) return res.status(500).json({ message: 'Error al actualizar la foto' });
+    try {
+      // Subir a Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'perfil_usuarios',
+        width: 300,
+        height: 300,
+        crop: 'fill'
+      });
 
-        res.json({ 
-          message: 'Foto actualizada exitosamente',
-          filename: profileImage // Asegúrate de enviar solo el nombre del archivo
-        });
-      }
-    );
+      // Limpiar archivo temporal
+      fs.unlinkSync(req.file.path);
+
+      const imageUrl = result.secure_url;
+      const userId = decoded.id;
+
+      db.query(
+        'UPDATE usuarios SET foto_perfil = ? WHERE id_usuario = ?',
+        [imageUrl, userId],
+        (err) => {
+          if (err) return res.status(500).json({ message: 'Error al actualizar la foto' });
+
+          res.json({ 
+            message: 'Foto actualizada exitosamente',
+            filename: imageUrl
+          });
+        }
+      );
+    } catch (error) {
+      console.error('Error al subir a Cloudinary:', error);
+      res.status(500).json({ message: 'Error al subir la imagen' });
+    }
   });
 };

@@ -63,7 +63,7 @@ const SharedResources = () => {
 
   const handlePreview = async (resource) => {
     if (resource.tipo_archivo === 'PDF') {
-      window.open(`${process.env.REACT_APP_API_FILES_URL}/uploads/recursos/${resource.archivo_url.split('/').pop()}`, '_blank');
+      window.open(resource.archivo_url, '_blank');
     } else if (resource.tipo_archivo === 'DOCX') {
       try {
         setCurrentWordResource(resource);
@@ -71,7 +71,7 @@ const SharedResources = () => {
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const response = await fetch(`${process.env.REACT_APP_API_FILES_URL}/uploads/recursos/${resource.archivo_url.split('/').pop()}`);
+        const response = await fetch(resource.archivo_url);
         if (!response.ok) {
           throw new Error('Archivo no encontrado en el servidor');
         }
@@ -109,7 +109,7 @@ const SharedResources = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const fileUrl = `${process.env.REACT_APP_API_FILES_URL}/uploads/recursos/${resource.archivo_url.split('/').pop()}?download=true`;
+      const fileUrl = resource.archivo_url;
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;
