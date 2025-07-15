@@ -21,7 +21,8 @@ const storage = new CloudinaryStorage({
       format: ext,
       public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
       resource_type: 'raw',
-      type: 'upload' // Esto hace el archivo público y solucionará el error 401
+      type: 'upload', // Esto hace el archivo público y solucionará el error 401
+      access_mode: 'public'
     };
   },
 });

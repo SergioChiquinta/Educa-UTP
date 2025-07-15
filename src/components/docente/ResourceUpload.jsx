@@ -63,7 +63,6 @@ const ResourceUpload = ({ courses, categories, onUploadSuccess }) => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
           },
           timeout: 30000,
         }
