@@ -109,7 +109,7 @@ const SharedResources = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const fileUrl = resource.archivo_url;
+      const fileUrl = resource.archivo_url + '?fl_attachment=true';
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`;

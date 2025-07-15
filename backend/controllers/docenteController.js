@@ -44,7 +44,7 @@ exports.getRecursosDocente = async (req, res) => {
 exports.subirRecurso = async (req, res) => {
   try {
     console.log('Iniciando subida de recurso...');
-    console.log('Cuerpo de la solicitud:', req.body);
+    console.log('Cuerpo de la solicitud:', JSON.stringify(req.body));
     console.log('Archivo recibido:', req.file);
     console.log('file.mimetype:', req.file?.mimetype);
 
