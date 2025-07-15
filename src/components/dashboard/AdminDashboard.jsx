@@ -212,7 +212,7 @@ function Dashboard() {
             <img
               src={
                 user.foto_perfil
-                  ? `${process.env.REACT_APP_API_URL}/uploads/${user.foto_perfil}?t=${Date.now()}`
+                  ? `${process.env.REACT_APP_API_FILES_URL}/uploads/${user.foto_perfil}?t=${Date.now()}`
                   : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nombre_completo || "U")}&background=random&rounded=true&size=40`
               }
               alt="avatar"
