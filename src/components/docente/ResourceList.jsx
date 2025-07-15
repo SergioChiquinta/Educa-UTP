@@ -117,9 +117,18 @@ const ResourceList = () => {
       );
 
       // Actualizar el estado con los datos devueltos por el backend
-      setResources(resources.map(resource => 
-        resource.id_recurso === id ? response.data.recurso : resource
-      ));
+      setResources(prevResources => 
+        prevResources.map(resource => 
+          resource.id_recurso === id ? response.data.recurso : resource
+        )
+      );
+
+      // Aplicar nuevamente el filtro después de actualizar resources
+      setFilteredResources(prevResources => 
+        prevResources.map(resource => 
+          resource.id_recurso === id ? response.data.recurso : resource
+        )
+      );
 
       setEditingId(null);
     } catch (err) {

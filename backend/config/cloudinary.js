@@ -9,12 +9,18 @@ cloudinary.config({
 });
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'recursos',
-    allowed_formats: ['pdf', 'docx'],
-    resource_type: 'raw',
-    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
+  cloudinary,
+  params: async (req, file) => {
+    let ext = 'pdf';
+    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      ext = 'docx';
+    }
+    return {
+      folder: 'recursos',
+      format: ext,
+      public_id: `${Date.now()}-${file.originalname.split('.')[0]}`,
+      resource_type: 'raw',
+    };
   },
 });
 
