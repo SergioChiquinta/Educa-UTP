@@ -2,7 +2,7 @@
 const axios = require('axios');
 const express = require('express');
 const router = express.Router();
-const db = require('./models/db');
+const db = require('../models/db');
 
 router.get('/view-pdf/:id_recurso', async (req, res) => {
   try {
