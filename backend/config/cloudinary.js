@@ -17,7 +17,9 @@ const storage = new CloudinaryStorage({
       resource_type: 'raw',
       type: 'upload',
       access_mode: 'public',
-      sign_url: false
+      sign_url: false,
+      use_filename: true,
+      unique_filename: false,
     };
   },
 });
