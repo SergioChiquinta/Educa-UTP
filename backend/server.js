@@ -9,8 +9,8 @@ app.use(cors({
   origin: ['http://localhost:3001', 'http://127.0.0.1:3001', 'https://educa-utp-frontend.onrender.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'],
-  exposedHeaders: ['Content-Disposition']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control', 'Range'],
+  exposedHeaders: ['Content-Disposition', 'Content-Length', 'Content-Range']
 }));
 
 app.use((req, res, next) => {
@@ -35,15 +35,11 @@ const authRoutes = require('./routes/authRoutes');
 const docenteRoutes = require('./routes/docenteRoutes');
 const sharedRoutes = require('./routes/sharedRoutes');
 const userRoutes = require('./routes/userRoutes');
-const viewRoutes = require('./routes/viewRoutes');
-const downloadRoutes = require('./routes/downloadRoutes');
 
 app.use('/api', authRoutes);
 app.use('/api/docente', docenteRoutes);
 app.use('/api/general', sharedRoutes);
 app.use('/api', userRoutes);
-app.use('/api', viewRoutes);
-app.use('/api', downloadRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 3000;

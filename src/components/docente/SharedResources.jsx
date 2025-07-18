@@ -63,26 +63,45 @@ const SharedResources = () => {
   };
 
   const handlePreview = async (resource) => {
-    if (resource.tipo_archivo === 'PDF') {
-      const previewUrl = `${process.env.REACT_APP_API_URL}/view-pdf/${resource.id_recurso}`;
-      window.open(previewUrl, '_blank');
-    } else if (resource.tipo_archivo === 'DOCX') {
-      try {
+    try {
+      console.log('Intentando previsualizar recurso:', resource);
+      console.log('URL del archivo:', resource.archivo_url);
+      console.log('Tipo de archivo:', resource.tipo_archivo);
+      if (resource.tipo_archivo === 'PDF') {
+        // Verificar que la URL existe
+        const response = await fetch(resource.archivo_url, { method: 'HEAD' });
+        if (!response.ok) {
+          throw new Error('No se pudo acceder al archivo PDF');
+        }
+        
+        // Abrir en nueva pestaña con token de autorización si es necesario
+        const previewWindow = window.open('', '_blank');
+        axios.get(resource.archivo_url, {
+          responseType: 'blob',
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(response => {
+          const fileURL = URL.createObjectURL(response.data);
+          previewWindow.location.href = fileURL;
+        }).catch(err => {
+          previewWindow.close();
+          throw err;
+        });
+        
+      } else if (resource.tipo_archivo === 'DOCX') {
         setCurrentWordResource(resource);
         setShowWordModal(true);
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const response = await fetch(resource.archivo_url);
-        if (!response.ok) {
-          throw new Error('Archivo no encontrado en el servidor');
-        }
-        const arrayBuffer = await response.arrayBuffer();
-
+        const response = await axios.get(resource.archivo_url, {
+          responseType: 'arraybuffer',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
         previewContainerRef.current.innerHTML = '';
 
         await renderAsync(
-          arrayBuffer,
+          response.data,
           previewContainerRef.current,
           null,
           {
@@ -95,31 +114,68 @@ const SharedResources = () => {
             debug: false
           }
         );
-      } catch (error) {
-        console.error('Error al previsualizar DOCX:', error);
-        toast.error('Error al cargar la previsualización');
-        setShowWordModal(false);
       }
+    } catch (error) {
+      console.error('Error al previsualizar:', error);
+      console.error('Detalles del error:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      toast.error(`Error al obtener el ${resource.tipo_archivo}`);
+      toast.error(`Error al obtener el ${resource.tipo_archivo}: ${error.message}`);
     }
   };
 
   const handleDownload = async (resource) => {
     try {
+      // Registrar la descarga en el backend
       await axios.post(
         `${process.env.REACT_APP_API_URL}/general/registrar-descarga`,
         { id_recurso: resource.id_recurso },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const fileUrl = `${process.env.REACT_APP_API_URL}/download/${resource.id_recurso}`;
+      // Manejo especial para PDFs
+      if (resource.tipo_archivo === 'PDF') {
+        // Usar axios para obtener el blob con el token de autorización
+        const response = await axios.get(resource.archivo_url, {
+          responseType: 'blob',
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      // Abrir en misma ventana
-      window.location.href = fileUrl;
+        // Crear URL del blob
+        const url = window.URL.createObjectURL(new Blob([response.data], {
+          type: response.headers['content-type']
+        }));
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${resource.titulo}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpiar
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        // Manejo normal para DOCX y otros tipos
+        const link = document.createElement('a');
+        link.href = resource.archivo_url;
+        link.setAttribute('download', `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
 
       toast.success('Descarga iniciada');
     } catch (err) {
-      console.error('Error al descargar:', err);
-      toast.error('Error al registrar la descarga');
+      console.error('Error al descargar:', {
+        error: err,
+        response: err.response,
+        message: err.message
+      });
+      toast.error(`Error al descargar el recurso: ${err.message}`);
     }
   };
 
