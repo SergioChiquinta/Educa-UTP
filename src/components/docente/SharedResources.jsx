@@ -6,8 +6,11 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button } from 'react-bootstrap';
 import { renderAsync } from 'docx-preview';
+import { Document, Page, pdfjs } from 'react-pdf';
 import '../../styles/ResourceTables.css';
 import '../../styles/ResourceModalPreview.css';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
@@ -19,6 +22,10 @@ const SharedResources = () => {
   const [filterText, setFilterText] = useState('');
   const [filteredResources, setFilteredResources] = useState([]);
   const previewContainerRef = useRef(null);
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfPages, setPdfPages] = useState(null);
+  const [currentPDFResource, setCurrentPDFResource] = useState(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -68,25 +75,10 @@ const SharedResources = () => {
       console.log('URL del archivo:', resource.archivo_url);
       console.log('Tipo de archivo:', resource.tipo_archivo);
       if (resource.tipo_archivo === 'PDF') {
-        // Verificar que la URL existe
-        const response = await fetch(resource.archivo_url, { method: 'HEAD' });
-        if (!response.ok) {
-          throw new Error('No se pudo acceder al archivo PDF');
-        }
-        
-        // Abrir en nueva pestaña con token de autorización si es necesario
-        const previewWindow = window.open('', '_blank');
-        axios.get(resource.archivo_url, {
-          responseType: 'blob',
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(response => {
-          const fileURL = URL.createObjectURL(response.data);
-          previewWindow.location.href = fileURL;
-        }).catch(err => {
-          previewWindow.close();
-          throw err;
-        });
-        
+        setCurrentPDFResource(resource);
+        setPdfUrl(resource.archivo_url);
+        setShowPDFModal(true);
+
       } else if (resource.tipo_archivo === 'DOCX') {
         setCurrentWordResource(resource);
         setShowWordModal(true);
@@ -323,6 +315,50 @@ const SharedResources = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal para previsualización de PDF */}
+      <Modal show={showPDFModal} onHide={() => setShowPDFModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-file-earmark-pdf me-2"></i>
+            {currentPDFResource?.titulo}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ height: '70vh', overflow: 'auto' }}>
+          {pdfUrl ? (
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={({ numPages }) => setPdfPages(numPages)}
+              onLoadError={(err) => {
+                console.error('Error al cargar el PDF:', err);
+                toast.error('Error al cargar el PDF');
+              }}
+            >
+              {Array.from(new Array(pdfPages), (_, index) => (
+                <Page key={`page_${index + 1}`} pageNumber={index + 1} />
+              ))}
+            </Document>
+          ) : (
+            <p>Cargando documento PDF...</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="primary"
+            onClick={() => {
+              if (currentPDFResource) {
+                handleDownload(currentPDFResource);
+              }
+            }}
+          >
+            <i className="bi bi-download me-2"></i> Descargar
+          </Button>
+          <Button variant="secondary" onClick={() => setShowPDFModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
     </div>
   );
 };
