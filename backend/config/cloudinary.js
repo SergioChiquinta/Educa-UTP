@@ -11,10 +11,12 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
+    const isPDF = file.mimetype === 'application/pdf';
+
     return {
       folder: 'recursos',
       public_id: `${Date.now()}-${file.originalname}`,
-      resource_type: 'raw',
+      resource_type: isPDF ? 'image' : 'raw',
       type: 'upload',
       access_mode: 'public',
       sign_url: false,
