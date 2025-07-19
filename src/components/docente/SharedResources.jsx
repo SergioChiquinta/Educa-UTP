@@ -11,7 +11,8 @@ import '../../styles/ResourceTables.css';
 import '../../styles/ResourceModalPreview.css';
 
 // Importar el worker desde pdfjs-dist
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+// pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
@@ -129,52 +130,43 @@ const SharedResources = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Manejo especial para PDFs
-      if (resource.tipo_archivo === 'PDF') {
-        // Usar axios para obtener el blob con el token de autorización
-        const response = await axios.get(resource.archivo_url, {
-          responseType: 'blob',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // Extraer el nombre del archivo de la URL o usar el título del recurso
-        let filename = resource.titulo;
-        
-        // Verificar si el título ya tiene extensión .pdf
-        if (!filename.toLowerCase().endsWith('.pdf')) {
-          filename += '.pdf';
+      // Manejo especial para todos los tipos de archivo
+      const response = await axios.get(resource.archivo_url, {
+        responseType: 'blob',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
         }
+      });
 
-        // Crear URL del blob
-        const url = window.URL.createObjectURL(new Blob([response.data], {
-          type: response.headers['content-type']
-        }));
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        
-        // Limpiar
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      // Extraer el nombre del archivo
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = resource.titulo;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
       } else {
-        // Manejo normal para DOCX y otros tipos
-        const link = document.createElement('a');
-        link.href = resource.archivo_url;
-        
-        // Para DOCX, verificar si el título ya tiene la extensión
-        let filename = resource.titulo;
-        if (!filename.toLowerCase().endsWith('.docx')) {
-          filename += `.${resource.tipo_archivo.toLowerCase()}`;
+        // Si no hay content-disposition, construir el nombre
+        const ext = resource.tipo_archivo.toLowerCase();
+        if (!filename.toLowerCase().endsWith(`.${ext}`)) {
+          filename += `.${ext}`;
         }
-        
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
       }
+
+      // Crear URL del blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast.success('Descarga iniciada');
     } catch (err) {
