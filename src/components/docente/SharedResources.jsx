@@ -346,20 +346,13 @@ const SharedResources = () => {
             <Document
               file={pdfUrl}
               onLoadSuccess={({ numPages }) => setPdfPages(numPages)}
-              onLoadError={(error) => {
-                console.error('Error al cargar PDF:', error);
-                toast.error('No se pudo cargar el PDF. Intente descargarlo directamente.');
-                setShowPDFModal(false);
+              onLoadError={(err) => {
+                console.error('Error al cargar el PDF:', err);
+                toast.error('Error al cargar el PDF');
               }}
-              loading={<div className="text-center py-5">Cargando PDF...</div>}
-              error={<div className="alert alert-danger">Error al cargar el PDF</div>}
             >
               {Array.from(new Array(pdfPages), (_, index) => (
-                <Page 
-                  key={`page_${index + 1}`} 
-                  pageNumber={index + 1} 
-                  width={Math.min(window.innerWidth * 0.8, 800)}
-                />
+                <Page key={`page_${index + 1}`} pageNumber={index + 1} />
               ))}
             </Document>
           ) : (
@@ -369,7 +362,11 @@ const SharedResources = () => {
         <Modal.Footer>
           <Button 
             variant="primary"
-            onClick={() => currentPDFResource && handleDownload(currentPDFResource)}
+            onClick={() => {
+              if (currentPDFResource) {
+                handleDownload(currentPDFResource);
+              }
+            }}
           >
             <i className="bi bi-download me-2"></i> Descargar
           </Button>
