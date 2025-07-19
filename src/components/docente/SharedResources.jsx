@@ -7,13 +7,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button } from 'react-bootstrap';
 import { renderAsync } from 'docx-preview';
 import { Document, Page, pdfjs } from 'react-pdf';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js?url';
+// import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import '../../styles/ResourceTables.css';
 import '../../styles/ResourceModalPreview.css';
 
 // Importar el worker desde pdfjs-dist
-// pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+// pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
