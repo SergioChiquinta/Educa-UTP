@@ -13,20 +13,21 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const isPDF = file.mimetype === 'application/pdf';
+    const isDOCX = file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     
-    // Extraer el nombre del archivo sin extensión
-    const originalName = path.parse(file.originalname).name;
+    // Extraer información del archivo
+    const parsed = path.parse(file.originalname);
     
     return {
       folder: 'recursos',
-      public_id: `${Date.now()}-${originalName}`, // Usar solo el nombre sin extensión
+      public_id: isPDF ? `${Date.now()}-${parsed.name}` : file.originalname, // Mantener extensión para DOCX
       resource_type: isPDF ? 'image' : 'raw',
       type: 'upload',
       access_mode: 'public',
       sign_url: false,
-      use_filename: true,
+      use_filename: !isPDF, // Usar nombre completo para DOCX
       unique_filename: false,
-      format: isPDF ? 'pdf' : undefined, // Forzar formato PDF cuando corresponda
+      format: isPDF ? 'pdf' : undefined,
     };
   },
 });
