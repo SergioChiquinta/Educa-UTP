@@ -137,6 +137,14 @@ const SharedResources = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        // Extraer el nombre del archivo de la URL o usar el título del recurso
+        let filename = resource.titulo;
+        
+        // Verificar si el título ya tiene extensión .pdf
+        if (!filename.toLowerCase().endsWith('.pdf')) {
+          filename += '.pdf';
+        }
+
         // Crear URL del blob
         const url = window.URL.createObjectURL(new Blob([response.data], {
           type: response.headers['content-type']
@@ -144,7 +152,7 @@ const SharedResources = () => {
 
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${resource.titulo}.pdf`);
+        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
         
@@ -155,7 +163,14 @@ const SharedResources = () => {
         // Manejo normal para DOCX y otros tipos
         const link = document.createElement('a');
         link.href = resource.archivo_url;
-        link.setAttribute('download', `${resource.titulo}.${resource.tipo_archivo.toLowerCase()}`);
+        
+        // Para DOCX, verificar si el título ya tiene la extensión
+        let filename = resource.titulo;
+        if (!filename.toLowerCase().endsWith('.docx')) {
+          filename += `.${resource.tipo_archivo.toLowerCase()}`;
+        }
+        
+        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
