@@ -21,15 +21,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configuración de archivos estáticos con middleware personalizado
-// app.use('/uploads', (req, res, next) => {
-  // Forzar descarga para archivos PDF cuando se agrega ?download=true
-//  if (req.path.endsWith('.pdf') && req.query.download === 'true') {
-//    res.setHeader('Content-Disposition', 'attachment');
-//  }
-//  express.static(path.join(__dirname, 'uploads'))(req, res, next);
-//});
-
 // Rutas
 const authRoutes = require('./routes/authRoutes');
 const docenteRoutes = require('./routes/docenteRoutes');

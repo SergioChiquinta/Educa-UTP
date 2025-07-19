@@ -7,12 +7,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Modal, Button } from 'react-bootstrap';
 import { renderAsync } from 'docx-preview';
 import { Document, Page, pdfjs } from 'react-pdf';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import '../../styles/ResourceTables.css';
 import '../../styles/ResourceModalPreview.css';
 
 // Importar el worker desde pdfjs-dist
 // pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
@@ -78,7 +79,15 @@ const SharedResources = () => {
       console.log('Tipo de archivo:', resource.tipo_archivo);
       if (resource.tipo_archivo === 'PDF') {
         setCurrentPDFResource(resource);
-        setPdfUrl(resource.archivo_url);
+        
+        // Obtener el PDF con autorización
+        const response = await axios.get(resource.archivo_url, {
+          responseType: 'blob',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const blobUrl = URL.createObjectURL(response.data);
+        setPdfUrl(blobUrl);
         setShowPDFModal(true);
 
       } else if (resource.tipo_archivo === 'DOCX') {
@@ -337,13 +346,20 @@ const SharedResources = () => {
             <Document
               file={pdfUrl}
               onLoadSuccess={({ numPages }) => setPdfPages(numPages)}
-              onLoadError={(err) => {
-                console.error('Error al cargar el PDF:', err);
-                toast.error('Error al cargar el PDF');
+              onLoadError={(error) => {
+                console.error('Error al cargar PDF:', error);
+                toast.error('No se pudo cargar el PDF. Intente descargarlo directamente.');
+                setShowPDFModal(false);
               }}
+              loading={<div className="text-center py-5">Cargando PDF...</div>}
+              error={<div className="alert alert-danger">Error al cargar el PDF</div>}
             >
               {Array.from(new Array(pdfPages), (_, index) => (
-                <Page key={`page_${index + 1}`} pageNumber={index + 1} />
+                <Page 
+                  key={`page_${index + 1}`} 
+                  pageNumber={index + 1} 
+                  width={Math.min(window.innerWidth * 0.8, 800)}
+                />
               ))}
             </Document>
           ) : (
@@ -353,11 +369,7 @@ const SharedResources = () => {
         <Modal.Footer>
           <Button 
             variant="primary"
-            onClick={() => {
-              if (currentPDFResource) {
-                handleDownload(currentPDFResource);
-              }
-            }}
+            onClick={() => currentPDFResource && handleDownload(currentPDFResource)}
           >
             <i className="bi bi-download me-2"></i> Descargar
           </Button>
