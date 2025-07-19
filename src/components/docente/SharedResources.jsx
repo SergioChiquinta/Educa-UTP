@@ -10,8 +10,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import '../../styles/ResourceTables.css';
 import '../../styles/ResourceModalPreview.css';
 
-// Importar el worker desde pdfjs-dist directamente
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Importar el worker desde pdfjs-dist
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
 
 const SharedResources = () => {
   const [resources, setResources] = useState([]);
