@@ -64,7 +64,7 @@ Desarrollar una solución centralizada que permita a los docentes subir y clasif
 
 > Este repositorio contiene todo el código fuente del sistema EducaUTP:
 - Estructura del frontend y backend, el último está separado en una carpeta independiente.
-- Scripts SQL de base de datos (`/sql`).
+- Scripts SQL de base de datos (`.sql`).
 - Manuales, prototipos y enlaces de documentación se adjuntan en los siguientes enlaces:
   - Documentación Final del Proyecto (Avances por Sprints):
   - Manual de Usuarios::
