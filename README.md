@@ -1,58 +1,76 @@
-# Educa-UTP
+# Sistema de Gestión de Recursos Educativos - EducaUTP
 
-## 1. Introducción
+**EducaUTP** es una plataforma web desarrollada como proyecto final del curso _Herramientas de Desarrollo_, orientada a mejorar la organización, clasificación y distribución de materiales académicos digitales dentro de la Universidad Tecnológica del Perú (UTP). El sistema está diseñado con autenticación por roles y permite a docentes, estudiantes y administradores interactuar de forma segura y eficiente con recursos académicos.
 
-### 1.1. Objetivos del proyecto
-Crear una aplicación web que permita a docentes de la UTP gestionar recursos educativos digitales, con funcionalidades de Login, Registro y configuración de perfil.
+## Objetivo General
+Desarrollar una solución centralizada que permita a los docentes subir y clasificar materiales educativos, y a los estudiantes acceder a ellos mediante filtros de búsqueda inteligentes. Además, ofrece un panel administrativo para gestionar usuarios y monitorear estadísticas del sistema.
 
-### 1.2. Tecnologías utilizadas
-- **Frontend:** HTML/CSS/JavaScript (más adelante se integrará React)
-- **Backend:** Node.js (utilizando el módulo HTTP nativo)
-- **Base de Datos:** MySQL
-- **Control de versiones:** Git & GitHub
+---
 
-## 2. Descripción del Proyecto
+## Componentes Principales
 
-### 2.1. Resumen
-El sistema permitirá gestionar recursos educativos; docentes podrán subir y compartir materiales, y estudiantes acceder y descargar los recursos.
+### Autenticación y Control de Accesos
+- Implementación de login con **JWT**.
+- Middleware para rutas protegidas según roles: `docente`, `estudiante` y `administrador`.
+- Contraseñas cifradas con `bcrypt`.
 
-### 2.2. Requerimientos
-#### 2.2.1. Funcionales
-- Login y Registro de usuarios.
-- Configuración de perfil con foto.
-- Roles diferenciados: Administrador, Docente, Estudiante.
-#### 2.2.2. No Funcionales
-- Interfaz responsiva y accesible.
-- Validaciones en el cliente y el servidor.
-- Seguridad en el manejo de datos.
+### Gestión de Recursos Educativos
+- Subida de archivos en formato **PDF** y **DOCX**, alojados en **Cloudinary (modo raw/image)**.
+- Metadatos obligatorios: título, curso, categoría, autores, descripción.
+- Clasificación por curso, categoría y tipo de documento.
+- Visualización previa (modal React + PDF.js/docx-preview).
+- Descarga protegida por autenticación.
 
-### 2.3. Flujo de Trabajo Colaborativo
-Se usará GitFlow con las siguientes ramas: `main`, `develop`, `feature/*`, `bugfix/*`, y `release/*`.
+### Panel Administrativo
+- Gestión de usuarios: creación, edición, eliminación y filtrado.
+- Moderación de recursos: estados (`pendiente`, `aprobado`, `rechazado`).
+- Visualización de métricas clave: recursos subidos, usuarios activos, recursos más consultados.
 
-## 3. Procedimientos y Configuraciones del Proyecto
+### Búsqueda Avanzada
+- Búsqueda por palabras clave en título y descripción.
+- Filtros dinámicos por tipo, curso y categoría.
+- Interfaz responsiva y funcional para escritorio y móvil.
 
-### 3.1. Configuración Inicial del Repositorio
-- Creación del repositorio con `.gitignore` y archivo `README.md`.
-- Configuración de colaboraciones en GitHub.
+### ChatBot integrado
+- Asistente conversacional desarrollado con **Landbot.io**, embebido como componente React en la plataforma.
 
-### 3.2. Estructura del Proyecto
-_Estructura de carpetas se detalla en el documento._
+---
 
-### 3.3. Gestión de ramas
-Se seguirán buenas prácticas usando GitFlow.
+## Arquitectura en la Nube
 
-## 4. Procedimientos de Control de Versiones
+- **Frontend** desplegado en **Render**.
+- **Backend API RESTful** desplegado en **Render**.
+- **Base de datos MySQL** alojada en **Railway**.
+- **Gestión de archivos** en **Cloudinary** (documentos académicos + fotos de perfil).
+- Variables de entorno seguras vía `.env` en entorno cloud.
 
-- Commits frecuentes y descriptivos.
-- Pull Requests para revisión de código.
-- Fusión de ramas siguiendo criterios establecidos.
+---
 
-## 5. Documentación Técnica
+## Tecnologías Utilizadas
 
-- Guía para colaboradores.
-- Instrucciones de instalación y ejecución.
+| Categoría        | Tecnología                        |
+|------------------|------------------------------------|
+| Frontend         | React.js, Tailwind CSS             |
+| Backend          | Node.js, Express.js, JWT, Bcrypt   |
+| Base de Datos    | MySQL (Railway)                    |
+| Nube & Hosting   | Render, Cloudinary                 |
+| Gestión          | ClickUp, GitHub, Slack, Zoom       |
+| Prototipado UI   | Figma                              |
+| ChatBot          | Landbot.io                         |
 
-## 6. Conclusiones
+---
 
-- Lecciones aprendidas.
-- Mejoras futuras.
+## Repositorio del Proyecto
+
+> Este repositorio contiene todo el código fuente del sistema EducaUTP:
+- Estructura del frontend y backend, el último está separado en una carpeta independiente.
+- Scripts SQL de base de datos (`/sql`).
+- Manuales, prototipos y enlaces de documentación se adjuntan en los siguientes enlaces:
+  - Documentación Final del Proyecto (Avances por Sprints):
+  - Manual de Usuarios::
+  - Manual de Configuración del Sistema:
+  - Informe Técnico Final:
+
+🔗 **Repositorio GitHub**: [github.com/SergioChiquinta/Educa-UTP](https://github.com/SergioChiquinta/Educa-UTP)
+
+---
