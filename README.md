@@ -61,8 +61,10 @@ Desarrollar una solución centralizada que permita a los docentes subir y clasif
 ---
 
 ## Estructura del Repositorio
-A continuación, se detalla la estructura jerárquica del proyecto en su versión final, correspondiente al último commit en la rama master. Esta estructura sigue una separación clara de responsabilidades entre backend, frontend, configuración, testing y recursos base, asegurando mantenibilidad y escalabilidad:
+A continuación, se detalla la estructura jerárquica del proyecto en su versión final, correspondiente al último commit en la rama master. 
+Esta estructura sigue una separación clara de responsabilidades entre backend, frontend, configuración, testing y recursos base, asegurando mantenibilidad y escalabilidad:
 
+```
 Educa-UTP/
 ├── 📁 backend/              # Código fuente de Node.js, Express, rutas, middlewares, etc.
 ├── 📁 build/                # Archivos generados tras la compilación de producción (React)
@@ -84,6 +86,7 @@ Educa-UTP/
 ├── 📄 package.json          # Dependencias, scripts y metainformación del proyecto Node
 ├── 📄 package-lock.json     # Archivo de bloqueo para instalaciones consistentes
 ├── 📄 webpack.config.js     # Configuración principal de Webpack para el empaquetado
+```
 
 Notas:
 - El código del frontend está organizado bajo src/, mientras que el backend se encuentra dentro de backend/.
