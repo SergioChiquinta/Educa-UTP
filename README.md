@@ -60,16 +60,47 @@ Desarrollar una solución centralizada que permita a los docentes subir y clasif
 
 ---
 
+## Estructura del Repositorio
+A continuación, se detalla la estructura jerárquica del proyecto en su versión final, correspondiente al último commit en la rama master. Esta estructura sigue una separación clara de responsabilidades entre backend, frontend, configuración, testing y recursos base, asegurando mantenibilidad y escalabilidad:
+
+Educa-UTP/
+├── 📁 backend/              # Código fuente de Node.js, Express, rutas, middlewares, etc.
+├── 📁 build/                # Archivos generados tras la compilación de producción (React)
+├── 📁 public/               # Recursos estáticos del frontend (favicon, index.html, etc.)
+├── 📁 src/                  # Código fuente principal del frontend (componentes, vistas, etc.)
+├── 📁 cypress/              # Pruebas (unitarias y funcionales) con Cypress
+
+├── 📄 .env.example          # Archivo de ejemplo para configurar variables de entorno (.env)
+├── 📄 .gitignore            # Archivos y carpetas ignoradas por Git
+├── 📄 README.md             # Documento explicativo del proyecto y sus componentes
+
+├── 📄 config-overrides.js   # Configuración personalizada para Webpack (React)
+├── 📄 cypress.config.js     # Configuración general del entorno de pruebas Cypress
+├── 📄 jest.config.js        # Configuración de pruebas unitarias con Jest
+
+├── 📄 datos_login.sql       # Script SQL con usuarios predefinidos de prueba
+├── 📄 educautp_db.sql       # Script principal de la base de datos del sistema
+
+├── 📄 package.json          # Dependencias, scripts y metainformación del proyecto Node
+├── 📄 package-lock.json     # Archivo de bloqueo para instalaciones consistentes
+├── 📄 webpack.config.js     # Configuración principal de Webpack para el empaquetado
+
+Notas:
+- El código del frontend está organizado bajo src/, mientras que el backend se encuentra dentro de backend/.
+- Las pruebas automatizadas están en cypress/, con configuración en cypress.config.js. Algunas pruebas unitarias en React se integran vía Jest.
+- El archivo .env.example fue adaptado para despliegue en Render (frontend y backend) y Railway (base de datos).
+- El proyecto está estructurado para adaptarse a un flujo de CI/CD básico compatible con entornos cloud.
+
 ## Repositorio del Proyecto
 
 > Este repositorio contiene todo el código fuente del sistema EducaUTP:
 - Estructura del frontend y backend, el último está separado en una carpeta independiente.
 - Scripts SQL de base de datos (`.sql`).
 - Manuales, prototipos y enlaces de documentación se adjuntan en los siguientes enlaces:
-  - Documentación Final del Proyecto (Avances por Sprints):
-  - Manual de Usuarios::
-  - Manual de Configuración del Sistema:
-  - Informe Técnico Final:
+  - Documentación Final del Proyecto (Avances por Sprints): [Próximamente]
+  - Manual de Usuarios:: [Próximamente]
+  - Manual de Configuración del Sistema: [Próximamente]
+  - Informe Técnico Final: [https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true](https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true)  
 
 🔗 **Repositorio GitHub**: [github.com/SergioChiquinta/Educa-UTP](https://github.com/SergioChiquinta/Educa-UTP)
 
