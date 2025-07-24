@@ -100,10 +100,10 @@ Notas:
 - Estructura del frontend y backend, el último está separado en una carpeta independiente.
 - Scripts SQL de base de datos (`.sql`).
 - Manuales, prototipos y enlaces de documentación se adjuntan en los siguientes enlaces:
-  - Documentación Final del Proyecto (Avances por Sprints): [Próximamente]
-  - Manual de Usuarios:: [Próximamente]
-  - Manual de Configuración del Sistema: [Próximamente]
-  - Informe Técnico Final: [https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true](https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true)  
+  - Documentación Final del Proyecto (Avances por Sprints): 🔗 [https://docs.google.com/document/d/1_awm0P2m6YB__Uatk2koW9cEhIMCqwZn/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true](https://docs.google.com/document/d/1_awm0P2m6YB__Uatk2koW9cEhIMCqwZn/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true)
+  - Manual del Sistema / para Usuarios: 🔗 [https://www.canva.com/design/DAGrmmUKL8Y/5IORC7L6HXp04ed0qzGqcA/edit?utm_content=DAGrmmUKL8Y&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton](https://www.canva.com/design/DAGrmmUKL8Y/5IORC7L6HXp04ed0qzGqcA/edit?utm_content=DAGrmmUKL8Y&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+  - Manual de Configuración del Sistema: 🔗 [https://www.canva.com/design/DAGrml6Lw9g/n8VBMdj-ZYGuBIVIqOoZ5A/edit?utm_content=DAGrml6Lw9g&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton](https://www.canva.com/design/DAGrml6Lw9g/n8VBMdj-ZYGuBIVIqOoZ5A/edit?utm_content=DAGrml6Lw9g&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+  - Informe Técnico Final: 🔗 [https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true](https://docs.google.com/document/d/1QMc6lNx3wYpxX6T8HdyHsvHeflYodN-t/edit?usp=sharing&ouid=112056978032541725199&rtpof=true&sd=true)
 
 🔗 **Repositorio GitHub**: [github.com/SergioChiquinta/Educa-UTP](https://github.com/SergioChiquinta/Educa-UTP)
 
